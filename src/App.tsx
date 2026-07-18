@@ -81,22 +81,22 @@ const App = () => {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-[100] flex h-12 items-center justify-between border-b bg-background px-3 shadow-sm">
-        <strong className="text-sm sm:text-base">RUET Report Studio</strong>
-        <div className="flex rounded-md border bg-muted p-1">
+      <nav className="fixed inset-x-0 top-0 z-[100] flex h-12 items-center justify-between gap-3 border-b bg-secondary px-3">
+        <strong className="min-w-0 truncate text-sm font-semibold sm:text-base">RUET Report Studio</strong>
+        <div className="flex shrink-0 rounded-lg bg-muted p-1">
           <button
             type="button"
-            className={cn('rounded px-3 py-1 text-xs font-medium', tool === 'cover' && 'bg-background shadow')}
+            className={cn('rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground', tool === 'cover' && 'bg-background text-foreground shadow-sm')}
             onClick={() => setTool('cover')}
           >
-            Full Cover Editor
+            Cover Page
           </button>
           <button
             type="button"
-            className={cn('rounded px-3 py-1 text-xs font-medium', tool === 'report' && 'bg-background shadow')}
+            className={cn('rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground', tool === 'report' && 'bg-background text-foreground shadow-sm')}
             onClick={() => setTool('report')}
           >
-            Lab Report Builder
+            Lab Report
           </button>
         </div>
       </nav>
