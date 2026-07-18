@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      var themes, el, theme;
+      try {
+        themes = ["light", "dark"];
+        el = document.documentElement;
+        theme =
+          localStorage.getItem("<%= import.meta.env.PUBLIC_THEME_KEY %>") ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light");
+        el.classList.remove(...themes);
+        el.classList.add(theme);
+
+        if (themes.includes(theme)) {
+          el.style.colorScheme = theme;
+        }
+      } catch (_e) {
+        //
+      }
+    </script>
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="<%= import.meta.env.PUBLIC_UMAMI_WEBSITE_ID %>"
+    ></script>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1220593650780710"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div
+      id="loading-toast"
+      style="
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        background: #333e;
+        color: white;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        font-family: sans-serif;
+        font-size: 14px;
+        z-index: 9999;
+        border-radius: 1rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      "
+    >
+      Loading...
+    </div>
+    <div id="<%= mountId %>"></div>
+  </body>
+</html>
