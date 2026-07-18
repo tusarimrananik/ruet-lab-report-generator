@@ -91,6 +91,9 @@ export default function Home() {
   const [report,setReport] = useState<Report>(()=>{if(typeof window==="undefined")return initial;const raw=localStorage.getItem("ruet-report-draft");if(!raw)return initial;try{return normalizeDraft(JSON.parse(raw))}catch{return initial}});
   const [saved,setSaved] = useState("Draft saved locally");
   const [downloading,setDownloading] = useState(false);
+  const [generating,setGenerating] = useState(false);
+  const [aiNotes,setAiNotes] = useState("");
+  const [aiMessage,setAiMessage] = useState("");
   const fileRef=useRef<HTMLInputElement>(null);
   const department=useAtomValue(editorStore.studentDepartment);
   const courseCode=useAtomValue(editorStore.courseNo);
@@ -110,6 +113,24 @@ export default function Home() {
   const changePreset=(key:string)=>setReport(r=>({...r,preset:key,sections:presets[key].sections.map(s=>({...s}))}));
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
+  const fillWithAI=async()=>{
+    setGenerating(true);setAiMessage("");
+    try{
+      const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||"Could not generate the report.");
+      let filled=0;
+      setReport(current=>({...current,sections:current.sections.map(section=>{
+        if(section.body.trim())return section;
+        const generated=typeof data.sections?.[section.id]==="string"?data.sections[section.id].trim():"";
+        if(!generated)return section;
+        filled+=1;
+        return {...section,body:generated};
+      })}));
+      setAiMessage(filled?`AI filled ${filled} empty section${filled===1?"":"s"}. Review the content before downloading.`:"There were no empty sections to fill.");
+    }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
+    finally{setGenerating(false)}
+  };
   const exportWord=()=>{const body=document.querySelector(".paper")?.innerHTML||"";const html=`<html><head><meta charset="utf-8"><style>@page{margin:1in}body{font-family:'Times New Roman';font-size:12pt;line-height:1.5}h1{font-size:15pt;margin:0 0 22pt}h2{font-size:14pt;margin:0 0 5pt}.report-section{margin:0 0 14pt}p{text-align:justify;white-space:pre-wrap}pre{font-family:'Courier New';font-size:11pt;line-height:1.3;border:1px solid #222;padding:10pt;white-space:pre-wrap}img{display:block;max-width:100%;margin:8pt auto}</style></head><body>${body}</body></html>`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"application/msword"}));a.download=`${reportForExport.courseCode}-Lab-${reportForExport.labNo}.doc`;a.click();};
   const backup=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(reportForExport,null,2)],{type:"application/json"}));a.download="ruet-lab-report.json";a.click()};
   const importDraft=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{setReport(normalizeDraft(JSON.parse(String(rd.result))));}catch{alert("That file is not a valid report backup.")}};rd.readAsText(f)};
@@ -125,6 +146,11 @@ export default function Home() {
         <div className="report-panel">
           <label className="preset-field"><span>Report preset</span><select className="report-select" value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
           <div className="report-note">CSE 2206 format: Objective → Theory → Assembly Language Code → Output → Verdict → Discussion → Conclusion.</div>
+          <div className="ai-fill-card">
+            <div className="ai-fill-heading"><div><strong>AI report assistant</strong><span>Uses the cover details and anything already written.</span></div><span className="ai-badge">AI</span></div>
+            <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
+            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating||!reportForExport.labTitle.trim()} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
+          </div>
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
       </aside>
