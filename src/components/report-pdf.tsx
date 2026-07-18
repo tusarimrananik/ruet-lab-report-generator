@@ -20,6 +20,7 @@ export type LabReport = {
   university: string;
   presetDepartment: string;
   semester: string;
+  sessionalCourse: string;
   department: string;
   courseCode: string;
   courseTitle: string;
