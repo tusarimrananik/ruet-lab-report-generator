@@ -41,7 +41,7 @@ export default async function handler(request, response) {
   const ip = getClientIp(request);
   if (isRateLimited(ip)) return response.status(429).json({ error: 'AI generation limit reached. Try again later.' });
 
-  const { courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', university = '', universityStatus = '', presetDepartment = '', semester = '', notes = '', sections = [] } = request.body || {};
+  const { courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', sessionalCourse = '', university = '', universityStatus = '', presetDepartment = '', semester = '', notes = '', sections = [] } = request.body || {};
   if (!String(labTitle).trim()) return response.status(400).json({ error: 'Add the lab title on the cover page first.' });
 
   const safeSections = Array.isArray(sections) ? sections.slice(0, 12).filter(section => /^[a-z][a-z0-9_-]{0,39}$/.test(String(section.id || ''))) : [];
@@ -60,6 +60,7 @@ export default async function handler(request, response) {
     labNo: String(labNo).slice(0, 20),
     labTitle: String(labTitle).slice(0, 300),
     preset: String(preset).slice(0, 40),
+    sessionalCourse: String(sessionalCourse).slice(0, 240),
     university: String(university).slice(0, 160),
     universityStatus: String(universityStatus).slice(0, 40),
     department: String(presetDepartment).slice(0, 160),
@@ -72,7 +73,7 @@ export default async function handler(request, response) {
     })),
   };
 
-  const instructions = `Write a concise, technically accurate lab report using the supplied academic context and the exact section keys provided. Treat university, department, semester, and report format only as writing context; never claim an official university policy, template, course code, or curriculum rule that is not supplied. A universityStatus of "demo structure" means the selection is explicitly non-authoritative. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase any result or verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
+  const instructions = `Write a concise, technically accurate lab report for the supplied sessional course using the academic context and exact section keys provided. Treat university, department, semester, sessional course, and internal report format only as writing context; never claim an official university policy, template, course code, or curriculum rule that is not supplied. A universityStatus of "demo structure" means the selection is explicitly non-authoritative. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase any result or verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
 
   try {
     const upstream = await fetch(GROQ_CHAT_URL, {
