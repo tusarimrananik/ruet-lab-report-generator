@@ -1,7 +1,5 @@
-import { createHash } from 'node:crypto';
-
-const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
-const MODEL = 'gpt-5.6-terra';
+const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = 'openai/gpt-oss-20b';
 const MAX_REQUESTS = 5;
 const WINDOW_MS = 60 * 60 * 1000;
 const requestLog = new Map();
@@ -32,22 +30,13 @@ const isRateLimited = ip => {
   return false;
 };
 
-const getOutputText = response => {
-  for (const item of response.output || []) {
-    for (const part of item.content || []) {
-      if (part.type === 'output_text' && part.text) return part.text;
-    }
-  }
-  return '';
-};
-
 export default async function handler(request, response) {
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
     return response.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return response.status(503).json({ error: 'AI generation is not configured yet.' });
   }
 
@@ -87,23 +76,23 @@ export default async function handler(request, response) {
   const instructions = `Write a concise, technically accurate RUET lab report using the supplied context. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly and follow this exact order: Objective, Theory, Assembly Language Code, Output, Verdict, Discussion, Conclusion. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase the verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
 
   try {
-    const upstream = await fetch(OPENAI_RESPONSES_URL, {
+    const upstream = await fetch(GROQ_CHAT_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
-        reasoning: { effort: 'low' },
-        store: false,
-        max_output_tokens: 4000,
-        safety_identifier: `ruet-${createHash('sha256').update(ip).digest('hex').slice(0, 32)}`,
-        instructions,
-        input: JSON.stringify(context),
-        text: {
-          format: {
-            type: 'json_schema',
+        messages: [
+          { role: 'system', content: instructions },
+          { role: 'user', content: JSON.stringify(context) },
+        ],
+        temperature: 0.2,
+        max_completion_tokens: 4000,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
             name: 'ruet_lab_report',
             strict: true,
             schema,
@@ -115,24 +104,21 @@ export default async function handler(request, response) {
     const data = await upstream.json();
     if (!upstream.ok) {
       const errorCode = data.error?.code || 'unknown';
-      console.error('OpenAI report generation failed', upstream.status, errorCode);
-      if (errorCode === 'insufficient_quota') {
-        return response.status(402).json({ error: 'The OpenAI API account has no available credits. Add billing or credits, then try again.' });
-      }
-      if (errorCode === 'invalid_api_key') {
-        return response.status(503).json({ error: 'The configured OpenAI API key is invalid.' });
+      console.error('Groq report generation failed', upstream.status, errorCode);
+      if (upstream.status === 401) {
+        return response.status(503).json({ error: 'The configured Groq API key is invalid.' });
       }
       if (upstream.status === 429) {
-        return response.status(429).json({ error: 'OpenAI is rate-limiting requests. Try again shortly.' });
+        return response.status(429).json({ error: 'Groq is rate-limiting requests. Try again shortly.' });
       }
       return response.status(502).json({ error: 'AI generation is temporarily unavailable.' });
     }
 
-    const outputText = getOutputText(data);
+    const outputText = data.choices?.[0]?.message?.content || '';
     if (!outputText) return response.status(502).json({ error: 'AI returned no report content.' });
     return response.status(200).json({ sections: JSON.parse(outputText) });
   } catch (error) {
-    console.error('AI report generation failed', error instanceof Error ? error.message : 'unknown');
+    console.error('Groq report generation failed', error instanceof Error ? error.message : 'unknown');
     return response.status(502).json({ error: 'AI generation is temporarily unavailable.' });
   }
 }
