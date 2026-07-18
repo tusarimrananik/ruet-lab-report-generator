@@ -8,6 +8,7 @@ import { useAtomValue } from 'jotai';
 import { PDFDocument } from 'pdf-lib';
 import editorStore from '@/store/editor';
 import icon from '@/assets/icon.svg';
+import { academicTerms, getDepartment, getUniversity, universities } from '@/data/report-presets';
 import { CoverTemplate } from './cover-template';
 import { LabReport, ReportDocument, ReportSection } from './report-pdf';
 import { Button } from './ui/button';
@@ -56,7 +57,8 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
 };
 
 const initial: Report = {
-  preset:"assembly", department:"Computer Science & Engineering", courseCode:"CSE 2206",
+  preset:"assembly", university:"ruet", presetDepartment:"CSE", semester:"2-2",
+  department:"Computer Science & Engineering", courseCode:"CSE 2206",
   courseTitle:"Microprocessors, Microcontrollers and Assembly Language Sessional", labNo:"01",
   labTitle:"Allocation of Memory Values with 8-bit Registers", experimentDate:"", submissionDate:"",
   studentName:"Md. Tusar Imran", roll:"2303096", section:"B", series:"23",
@@ -75,10 +77,16 @@ const legacyAssemblyPrompts = new Set([
 ]);
 
 const normalizeDraft = (draft: Report): Report => {
-  if (draft.preset !== "assembly") return draft;
-  const existing = new Map(draft.sections.map(section => [section.id, section]));
-  return {
+  const normalized = {
     ...draft,
+    university: draft.university || "ruet",
+    presetDepartment: draft.presetDepartment || "CSE",
+    semester: draft.semester || "2-2",
+  };
+  if (normalized.preset !== "assembly") return normalized;
+  const existing = new Map(normalized.sections.map(section => [section.id, section]));
+  return {
+    ...normalized,
     sections: presets.assembly.sections.map(template => {
       const saved = existing.get(template.id) ?? (template.id === "verdict" ? existing.get("result") : undefined);
       const body = saved?.body && !legacyAssemblyPrompts.has(saved.body) ? saved.body : "";
@@ -107,17 +115,23 @@ export default function Home() {
   const section=useAtomValue(editorStore.studentSection);
   const teacherName=useAtomValue(editorStore.teacherName);
   const teacherTitle=useAtomValue(editorStore.teacherDesignation);
+  const selectedUniversity=useMemo(()=>getUniversity(report.university),[report.university]);
+  const selectedDepartment=useMemo(()=>getDepartment(report.university,report.presetDepartment),[report.university,report.presetDepartment]);
   const reportForExport=useMemo<Report>(()=>({...report,department,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
   useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem("ruet-report-draft",JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
   const changePreset=(key:string)=>setReport(r=>({...r,preset:key,sections:presets[key].sections.map(s=>({...s}))}));
+  const changeUniversity=(id:string)=>setReport(r=>{
+    const university=getUniversity(id);
+    return {...r,university:university.id,presetDepartment:university.departments[0].code};
+  });
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
   const fillWithAI=async()=>{
     if(!reportForExport.labTitle.trim()){setAiMessage("Add the Lab Title on the Cover Page first, then try again.");return;}
     setGenerating(true);setAiMessage("");
     try{
-      const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
+      const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,university:selectedUniversity.name,universityStatus:selectedUniversity.verified?"verified RUET structure":"demo structure",presetDepartment:`${selectedDepartment.code} — ${selectedDepartment.name}`,semester:report.semester,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
       const data=await response.json();
       if(!response.ok)throw new Error(data.error||"Could not generate the report.");
       let filled=0;
@@ -145,8 +159,17 @@ export default function Home() {
       <aside className="report-editor">
         <div className="report-editor-heading"><div><h2>Report Content</h2><p>Cover details are used automatically.</p></div><span className="progress">{complete}% ready</span></div>
         <div className="report-panel">
-          <label className="preset-field"><span>Report preset</span><select className="report-select" value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
-          <div className="report-note">CSE 2206 format: Objective → Theory → Assembly Language Code → Output → Verdict → Discussion → Conclusion.</div>
+          <div className="preset-card">
+            <div className="preset-card-heading"><div><strong>Report preset</strong><span>Choose the academic context used by the AI assistant.</span></div><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
+            <div className="preset-grid">
+              <label className="preset-field"><span>University</span><select className="report-select" value={report.university} onChange={e=>changeUniversity(e.target.value)}>{universities.map(university=><option key={university.id} value={university.id}>{university.shortName}{university.verified?" — Verified":" — Demo"}</option>)}</select></label>
+              <label className="preset-field"><span>Department</span><select className="report-select" value={report.presetDepartment} onChange={e=>setReport(r=>({...r,presetDepartment:e.target.value}))}>{selectedUniversity.departments.map(department=><option key={department.code} value={department.code}>{department.code} — {department.name}</option>)}</select></label>
+              <label className="preset-field"><span>Semester</span><select className="report-select" value={report.semester} onChange={e=>setReport(r=>({...r,semester:e.target.value}))}>{academicTerms.map(term=><option key={term} value={term}>{term}</option>)}</select></label>
+              <label className="preset-field"><span>Report format</span><select className="report-select" value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
+            </div>
+            <div className="preset-source">{selectedUniversity.verified?<><span>18 departments verified from the</span> <a href="https://www.ruet.ac.bd/faculty" target="_blank" rel="noreferrer">official RUET faculty directory</a>.</>:<>Department choices for {selectedUniversity.shortName} are demo data for now.</>}</div>
+          </div>
+          <div className="report-note">The university, department, and semester guide AI generation only. Cover-page details are still kept out of the lab-report pages.</div>
           <div className="ai-fill-card">
             <div className="ai-fill-heading"><div><strong>AI report assistant</strong><span>Uses the cover details and anything already written.</span></div><span className="ai-badge">AI</span></div>
             <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
