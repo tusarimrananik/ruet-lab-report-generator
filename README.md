@@ -31,7 +31,7 @@ Then open `http://localhost:3000`.
 AI autofill is served through the Vercel API route. Add the key to `.env.local` for local Vercel development, or configure it as a protected environment variable in the hosting project:
 
 ```bash
-OPENAI_API_KEY=your_key_here
+GROQ_API_KEY=your_key_here
 ```
 
 Never expose the key through a client-side environment variable or commit it to Git.
@@ -49,7 +49,7 @@ The full cover editor is integrated from [ruet-cover-page/ruet-cover-page.github
 
 ## Privacy
 
-Drafts and uploaded images remain in the user's browser. When AI autofill is requested, the lab title, optional notes, and text-only report context are sent through the server-side OpenAI API route. Uploaded image data and the API key are not sent to the browser.
+Drafts and uploaded images remain in the user's browser. When AI autofill is requested, the lab title, optional notes, and text-only report context are sent through the server-side Groq API route. Uploaded image data and the API key are not sent to the browser.
 
 ## License
 
