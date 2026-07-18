@@ -114,7 +114,17 @@ export default async function handler(request, response) {
 
     const data = await upstream.json();
     if (!upstream.ok) {
-      console.error('OpenAI report generation failed', upstream.status, data.error?.code || 'unknown');
+      const errorCode = data.error?.code || 'unknown';
+      console.error('OpenAI report generation failed', upstream.status, errorCode);
+      if (errorCode === 'insufficient_quota') {
+        return response.status(402).json({ error: 'The OpenAI API account has no available credits. Add billing or credits, then try again.' });
+      }
+      if (errorCode === 'invalid_api_key') {
+        return response.status(503).json({ error: 'The configured OpenAI API key is invalid.' });
+      }
+      if (upstream.status === 429) {
+        return response.status(429).json({ error: 'OpenAI is rate-limiting requests. Try again shortly.' });
+      }
       return response.status(502).json({ error: 'AI generation is temporarily unavailable.' });
     }
 
