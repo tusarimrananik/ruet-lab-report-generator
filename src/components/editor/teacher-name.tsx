@@ -72,8 +72,10 @@ export function TeacherName({
           const teachers = await idbKeyVal.get('teachers', teachersIDBStore);
           if (Array.isArray(teachers)) return teachers;
         }
-        const apiBase = process.env.PUBLIC_API || 'https://api.nabilsnigdho.dev';
-        const res = await fetch(`${apiBase}/teachers`);
+        const teacherUrl = process.env.PUBLIC_API
+          ? `${process.env.PUBLIC_API}/teachers`
+          : '/api/teachers';
+        const res = await fetch(teacherUrl);
         if (!res.ok) throw new Error(`Teacher lookup failed: ${res.status}`);
         const data = await res.json();
         const teachers = (
