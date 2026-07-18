@@ -7,8 +7,11 @@ import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
 import { PDFDocument } from 'pdf-lib';
 import editorStore from '@/store/editor';
+import icon from '@/assets/icon.svg';
 import { CoverTemplate } from './cover-template';
 import { LabReport, ReportDocument, ReportSection } from './report-pdf';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
 
 type Section = ReportSection;
 type Report = LabReport;
@@ -83,22 +86,22 @@ export default function Home() {
   const importDraft=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{setReport(JSON.parse(String(rd.result)));}catch{alert("That file is not a valid report backup.")}};rd.readAsText(f)};
   const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={reportForExport}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${reportForExport.courseCode || "RUET"}-Lab-${reportForExport.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
   return <main className="report-studio">
-    <header className="topbar">
-      <div className="brand"><span className="brandmark">R</span><div><strong>Reportor</strong><small>RUET lab report studio</small></div></div>
-      <div className="actions"><span className="saved"><i/> {saved}</span><button className="quiet" onClick={backup}>Backup</button><button className="quiet" onClick={()=>fileRef.current?.click()}>Import</button><input ref={fileRef} hidden type="file" accept="application/json" onChange={importDraft}/><button className="quiet" onClick={exportWord}>Word</button><button className="primary" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</button></div>
+    <header className="report-toolbar">
+      <div className="report-title"><img src={icon} alt=""/><h1>Lab Report <span>Builder</span></h1></div>
+      <div className="report-actions"><span className="saved"><i/> {saved}</span><Button variant="outline" size="sm" className="quiet" onClick={backup}>Backup</Button><Button variant="outline" size="sm" className="quiet" onClick={()=>fileRef.current?.click()}>Import</Button><input ref={fileRef} hidden type="file" accept="application/json" onChange={importDraft}/><Button variant="outline" size="sm" className="quiet" onClick={exportWord}>Word</Button><Button size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
     </header>
-    <section className="workspace">
-      <aside className="editor">
-        <div className="editor-head"><div><p className="eyebrow">REPORT CONTENT</p><h1>Write your lab report.</h1></div><span className="progress">{complete}% ready</span></div>
-        <div className="panel content-panel">
-          <label>Report preset<select value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
-          <p className="hint">Cover details are used automatically. Add only the report content here.</p>
-          {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong><label className="image-add">+ image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?9:5} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
+    <section className="report-workspace">
+      <aside className="report-editor">
+        <div className="report-editor-heading"><div><h2>Report Content</h2><p>Cover details are used automatically.</p></div><span className="progress">{complete}% ready</span></div>
+        <div className="report-panel">
+          <label className="preset-field"><span>Report preset</span><select className="report-select" value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
+          <div className="report-note">Add only the report content here. Your draft remains saved in this browser.</div>
+          {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?9:5} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
       </aside>
-      <section className="preview-wrap"><div className="preview-title"><span>LAB REPORT PREVIEW</span><span>Times New Roman · 12 pt</span></div><article className="paper report-paper">
+      <section className="report-preview-column"><div className="report-preview-toolbar"><strong>Lab Report Preview</strong><span>Times New Roman · 12 pt</span></div><div className="preview-wrap"><article className="paper report-paper">
         <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
-      </article><p className="attribution">The downloaded PDF automatically places your completed cover before these report pages.</p></section>
+      </article><p className="attribution">The complete download places your cover before these report pages.</p></div></section>
     </section>
   </main>;
 }
