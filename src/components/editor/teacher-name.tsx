@@ -70,7 +70,9 @@ export function TeacherName({
           const teachers = await idbKeyVal.get('teachers', teachersIDBStore);
           if (Array.isArray(teachers)) return teachers;
         }
-        const res = await fetch(`${process.env.PUBLIC_API}/teachers`);
+        const apiBase = process.env.PUBLIC_API || 'https://api.nabilsnigdho.dev';
+        const res = await fetch(`${apiBase}/teachers`);
+        if (!res.ok) throw new Error(`Teacher lookup failed: ${res.status}`);
         const data = await res.json();
         const teachers = (
           data.list as { name: string; post: string; dept: string }[]
@@ -228,6 +230,10 @@ export function TeacherName({
                     </CommandItem>
                   ))}
                 </CommandGroup>
+              ) : !isLoading ? (
+                <div className="p-3 text-center text-sm text-muted-foreground">
+                  No matching teacher found. You can still type a name manually.
+                </div>
               ) : null}
             </CommandList>
           </PopoverContent>
