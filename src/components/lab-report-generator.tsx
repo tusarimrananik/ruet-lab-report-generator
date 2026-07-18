@@ -8,7 +8,7 @@ import { useAtomValue } from 'jotai';
 import { PDFDocument } from 'pdf-lib';
 import editorStore from '@/store/editor';
 import icon from '@/assets/icon.svg';
-import { academicTerms, getDepartment, getUniversity, universities } from '@/data/report-presets';
+import { academicTerms, getDepartment, getSessionalCourses, getUniversity, SessionalCourse, universities } from '@/data/report-presets';
 import { CoverTemplate } from './cover-template';
 import { LabReport, ReportDocument, ReportSection } from './report-pdf';
 import { Button } from './ui/button';
@@ -54,10 +54,28 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
     ["result","Result and Discussion","Compare experimental and theoretical values. Discuss errors, losses, and instrument limitations."],
     ["conclusion","Conclusion","State whether the experiment verified the expected behaviour."],
   ].map(([id,title,body])=>({id,title,body})) },
+  experimental: { label: "Experimental Science", sections: [
+    ["objective","Objective","State the purpose of the experiment clearly."],
+    ["theory","Theory","Explain the scientific principle, relationships, and relevant formulae."],
+    ["apparatus","Required Apparatus","List the equipment, materials, and quantities used."],
+    ["procedure","Procedure","Describe the experimental steps in the order performed, including necessary safety precautions."],
+    ["data","Observations and Calculations","Record observations with units, equations, sample calculations, and uncertainty where relevant."],
+    ["result","Result","State the result obtained without inventing measurements that were not observed."],
+    ["discussion","Discussion","Interpret the result and discuss errors, limitations, and comparison with expected behaviour."],
+    ["conclusion","Conclusion","Summarize what the experiment demonstrated."],
+  ].map(([id,title,body])=>({id,title,body})) },
+  general: { label: "General Sessional", sections: [
+    ["objective","Objective","State the purpose and expected learning outcome."],
+    ["introduction","Introduction or Theory","Explain the relevant concepts and background."],
+    ["method","Method or Activity","Describe the work completed in a clear sequence."],
+    ["output","Output or Deliverable","Add the produced work, result, presentation summary, or observation."],
+    ["discussion","Discussion","Explain the outcome, important decisions, limitations, and lessons learned."],
+    ["conclusion","Conclusion","Summarize the completed work and learning outcome."],
+  ].map(([id,title,body])=>({id,title,body})) },
 };
 
 const initial: Report = {
-  preset:"assembly", university:"ruet", presetDepartment:"CSE", semester:"2-2",
+  preset:"assembly", university:"ruet", presetDepartment:"CSE", semester:"2-2", sessionalCourse:"CSE 2206",
   department:"Computer Science & Engineering", courseCode:"CSE 2206",
   courseTitle:"Microprocessors, Microcontrollers and Assembly Language Sessional", labNo:"01",
   labTitle:"Allocation of Memory Values with 8-bit Registers", experimentDate:"", submissionDate:"",
@@ -82,6 +100,7 @@ const normalizeDraft = (draft: Report): Report => {
     university: draft.university || "ruet",
     presetDepartment: draft.presetDepartment || "CSE",
     semester: draft.semester || "2-2",
+    sessionalCourse: draft.sessionalCourse || (draft.preset === "assembly" ? "CSE 2206" : ""),
   };
   if (normalized.preset !== "assembly") return normalized;
   const existing = new Map(normalized.sections.map(section => [section.id, section]));
@@ -117,21 +136,37 @@ export default function Home() {
   const teacherTitle=useAtomValue(editorStore.teacherDesignation);
   const selectedUniversity=useMemo(()=>getUniversity(report.university),[report.university]);
   const selectedDepartment=useMemo(()=>getDepartment(report.university,report.presetDepartment),[report.university,report.presetDepartment]);
+  const sessionalCourses=useMemo(()=>getSessionalCourses(report.university,report.presetDepartment,report.semester),[report.university,report.presetDepartment,report.semester]);
+  const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0],[sessionalCourses,report.sessionalCourse]);
   const reportForExport=useMemo<Report>(()=>({...report,department,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
   useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem("ruet-report-draft",JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
-  const changePreset=(key:string)=>setReport(r=>({...r,preset:key,sections:presets[key].sections.map(s=>({...s}))}));
+  const applyCourse=(r:Report,selected?:SessionalCourse):Report=>{
+    if(!selected)return {...r,sessionalCourse:""};
+    return {...r,sessionalCourse:selected.code,preset:selected.format,sections:presets[selected.format].sections.map(s=>({...s}))};
+  };
+  const changeCourse=(code:string)=>setReport(r=>applyCourse(r,getSessionalCourses(r.university,r.presetDepartment,r.semester).find(course=>course.code===code)));
   const changeUniversity=(id:string)=>setReport(r=>{
     const university=getUniversity(id);
-    return {...r,university:university.id,presetDepartment:university.departments[0].code};
+    const next={...r,university:university.id,presetDepartment:university.departments[0].code};
+    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
+  });
+  const changeDepartment=(code:string)=>setReport(r=>{
+    const next={...r,presetDepartment:code};
+    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
+  });
+  const changeSemester=(semester:string)=>setReport(r=>{
+    const next={...r,semester};
+    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
   });
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
   const fillWithAI=async()=>{
+    if(!selectedCourse){setAiMessage("No verified sessional course data is available for this RUET department yet.");return;}
     if(!reportForExport.labTitle.trim()){setAiMessage("Add the Lab Title on the Cover Page first, then try again.");return;}
     setGenerating(true);setAiMessage("");
     try{
-      const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,university:selectedUniversity.name,universityStatus:selectedUniversity.verified?"verified RUET structure":"demo structure",presetDepartment:`${selectedDepartment.code} — ${selectedDepartment.name}`,semester:report.semester,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
+      const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,sessionalCourse:`${selectedCourse.code} — ${selectedCourse.title}`,university:selectedUniversity.name,universityStatus:selectedUniversity.verified?"verified RUET curriculum":"demo structure",presetDepartment:`${selectedDepartment.code} — ${selectedDepartment.name}`,semester:report.semester,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
       const data=await response.json();
       if(!response.ok)throw new Error(data.error||"Could not generate the report.");
       let filled=0;
@@ -163,17 +198,17 @@ export default function Home() {
             <div className="preset-card-heading"><div><strong>Report preset</strong><span>Choose the academic context used by the AI assistant.</span></div><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
             <div className="preset-grid">
               <label className="preset-field"><span>University</span><select className="report-select" value={report.university} onChange={e=>changeUniversity(e.target.value)}>{universities.map(university=><option key={university.id} value={university.id}>{university.shortName}{university.verified?" — Verified":" — Demo"}</option>)}</select></label>
-              <label className="preset-field"><span>Department</span><select className="report-select" value={report.presetDepartment} onChange={e=>setReport(r=>({...r,presetDepartment:e.target.value}))}>{selectedUniversity.departments.map(department=><option key={department.code} value={department.code}>{department.code} — {department.name}</option>)}</select></label>
-              <label className="preset-field"><span>Semester</span><select className="report-select" value={report.semester} onChange={e=>setReport(r=>({...r,semester:e.target.value}))}>{academicTerms.map(term=><option key={term} value={term}>{term}</option>)}</select></label>
-              <label className="preset-field"><span>Report format</span><select className="report-select" value={report.preset} onChange={e=>changePreset(e.target.value)}>{Object.entries(presets).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></label>
+              <label className="preset-field"><span>Department</span><select className="report-select" value={report.presetDepartment} onChange={e=>changeDepartment(e.target.value)}>{selectedUniversity.departments.map(department=><option key={department.code} value={department.code}>{department.code} — {department.name}</option>)}</select></label>
+              <label className="preset-field"><span>Semester</span><select className="report-select" value={report.semester} onChange={e=>changeSemester(e.target.value)}>{academicTerms.map(term=><option key={term} value={term}>{term}</option>)}</select></label>
+              <label className="preset-field course-field"><span>Sessional course</span><select className="report-select" value={selectedCourse?.code??""} disabled={!sessionalCourses.length} onChange={e=>changeCourse(e.target.value)}>{sessionalCourses.length?sessionalCourses.map(course=><option key={course.code} value={course.code}>{course.code} — {course.title}{selectedUniversity.verified?"":" — Demo"}</option>):<option value="">Verified course data not available yet</option>}</select></label>
             </div>
-            <div className="preset-source">{selectedUniversity.verified?<><span>18 departments verified from the</span> <a href="https://www.ruet.ac.bd/faculty" target="_blank" rel="noreferrer">official RUET faculty directory</a>.</>:<>Department choices for {selectedUniversity.shortName} are demo data for now.</>}</div>
+            <div className="preset-source">{selectedUniversity.verified&&selectedDepartment.code==="CSE"?<><span>Sessional courses verified from your RUET CSE OBE Curriculum and Syllabus; department identity checked against the</span> <a href="https://www.ruet.ac.bd/faculty" target="_blank" rel="noreferrer">official RUET faculty directory</a>.</>:selectedUniversity.verified?<>This department is official, but its semester-by-semester curriculum source has not been added yet.</>:<>Sessional courses for {selectedUniversity.shortName} are demo data for now.</>}</div>
           </div>
-          <div className="report-note">The university, department, and semester guide AI generation only. Cover-page details are still kept out of the lab-report pages.</div>
+          <div className="report-note">The selected sessional course loads an appropriate report structure and guides AI generation. Cover-page details are still kept out of the lab-report pages.</div>
           <div className="ai-fill-card">
             <div className="ai-fill-heading"><div><strong>AI report assistant</strong><span>Uses the cover details and anything already written.</span></div><span className="ai-badge">AI</span></div>
             <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
-            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
+            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating||!selectedCourse} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
           </div>
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
