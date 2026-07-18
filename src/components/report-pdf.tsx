@@ -17,6 +17,9 @@ export type ReportSection = {
 
 export type LabReport = {
   preset: string;
+  university: string;
+  presetDepartment: string;
+  semester: string;
   department: string;
   courseCode: string;
   courseTitle: string;
