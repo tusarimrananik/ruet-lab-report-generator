@@ -60,6 +60,8 @@ export function TeacherName({
 
   const { data: teachers, isLoading } = useQuery({
     queryKey: ['teachers'],
+    retry: 2,
+    staleTime: 36e5,
     queryFn: async () => {
       try {
         const updatedAt = (await idbKeyVal.get(
@@ -109,8 +111,7 @@ export function TeacherName({
   }, [search, teachers]);
 
   const onSelectItem = (id: string) => {
-    const i = +id.slice(id.lastIndexOf(':') + 1);
-    const teacher = teachers?.[i];
+    const teacher = teachers?.find((item) => item.id === id);
     if (teacher) {
       onValueChange(teacher.name || '');
       setDesignation(teacher.post || '');
