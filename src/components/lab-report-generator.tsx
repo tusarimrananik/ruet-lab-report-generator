@@ -114,6 +114,7 @@ export default function Home() {
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
   const fillWithAI=async()=>{
+    if(!reportForExport.labTitle.trim()){setAiMessage("Add the Lab Title on the Cover Page first, then try again.");return;}
     setGenerating(true);setAiMessage("");
     try{
       const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
@@ -149,7 +150,7 @@ export default function Home() {
           <div className="ai-fill-card">
             <div className="ai-fill-heading"><div><strong>AI report assistant</strong><span>Uses the cover details and anything already written.</span></div><span className="ai-badge">AI</span></div>
             <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
-            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating||!reportForExport.labTitle.trim()} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
+            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
           </div>
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
