@@ -1,14 +1,14 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { pdf } from '@react-pdf/renderer';
+import { fileSave } from 'browser-fs-access';
+import { PDFDocument } from 'pdf-lib';
+import { CoverTemplate } from './cover-template';
+import { LabReport, ReportDocument, ReportSection } from './report-pdf';
 
-type Section = { id: string; title: string; body: string; kind?: "code" | "text" };
-type Report = {
-  preset: string; department: string; courseCode: string; courseTitle: string;
-  labNo: string; labTitle: string; experimentDate: string; submissionDate: string;
-  studentName: string; roll: string; section: string; series: string;
-  teacherName: string; teacherTitle: string; sections: Section[];
-};
+type Section = ReportSection;
+type Report = LabReport;
 
 const presets: Record<string, { label: string; sections: Section[] }> = {
   assembly: { label: "Assembly / Microprocessor", sections: [
@@ -56,6 +56,7 @@ export default function Home() {
   const [report,setReport] = useState<Report>(()=>{if(typeof window==="undefined")return initial;const raw=localStorage.getItem("ruet-report-draft");if(!raw)return initial;try{return JSON.parse(raw)}catch{return initial}});
   const [tab,setTab] = useState<"details"|"content">("details");
   const [saved,setSaved] = useState("Draft saved locally");
+  const [downloading,setDownloading] = useState(false);
   const fileRef=useRef<HTMLInputElement>(null);
   useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem("ruet-report-draft",JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
   const complete=useMemo(()=>Math.round(([report.courseCode,report.courseTitle,report.labNo,report.labTitle,report.studentName,report.roll,report.teacherName,...report.sections.map(s=>s.body)].filter(Boolean).length/(7+report.sections.length))*100),[report]);
@@ -66,10 +67,11 @@ export default function Home() {
   const exportWord=()=>{const body=document.querySelector(".paper")?.innerHTML||"";const html=`<html><head><meta charset="utf-8"><style>body{font-family:'Times New Roman';font-size:12pt;line-height:1.5}pre{font-family:'Courier New';font-size:11pt;border:1px solid #333;padding:12px}h2{font-size:16pt}.cover{text-align:center;page-break-after:always}.split{display:flex;justify-content:space-between;text-align:left}.section{margin:22px 0}</style></head><body>${body}</body></html>`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"application/msword"}));a.download=`${report.courseCode}-Lab-${report.labNo}.doc`;a.click();};
   const backup=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"}));a.download="ruet-lab-report.json";a.click()};
   const importDraft=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{setReport(JSON.parse(String(rd.result)));}catch{alert("That file is not a valid report backup.")}};rd.readAsText(f)};
+  const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={report}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${report.courseCode || "RUET"}-Lab-${report.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
   return <main className="report-studio">
     <header className="topbar">
       <div className="brand"><span className="brandmark">R</span><div><strong>Reportor</strong><small>RUET lab report studio</small></div></div>
-      <div className="actions"><span className="saved"><i/> {saved}</span><button className="quiet" onClick={backup}>Backup</button><button className="quiet" onClick={()=>fileRef.current?.click()}>Import</button><input ref={fileRef} hidden type="file" accept="application/json" onChange={importDraft}/><button className="quiet" onClick={exportWord}>Word</button><button className="primary" onClick={()=>window.print()}>Export PDF</button></div>
+      <div className="actions"><span className="saved"><i/> {saved}</span><button className="quiet" onClick={backup}>Backup</button><button className="quiet" onClick={()=>fileRef.current?.click()}>Import</button><input ref={fileRef} hidden type="file" accept="application/json" onChange={importDraft}/><button className="quiet" onClick={exportWord}>Word</button><button className="primary" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</button></div>
     </header>
     <section className="workspace">
       <aside className="editor">
@@ -94,16 +96,9 @@ export default function Home() {
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong><label className="image-add">+ image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?9:5} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>}
       </aside>
-      <section className="preview-wrap"><div className="preview-title"><span>LIVE A4 PREVIEW</span><span>Times New Roman · 12 pt</span></div><article className="paper">
-        <section className="cover">
-          <p className="motto">Heaven’s Light is Our Guide</p><h2>Rajshahi University of Engineering &amp; Technology</h2><img className="ruet-logo" src="/RUET-Logo.png" alt="RUET emblem"/><p>Department of {report.department}</p><p>{report.series} Series</p>
-          <div className="course"><p>Course Code: {report.courseCode}</p><p>Course Title: {report.courseTitle}</p></div>
-          <div className="lab-meta"><p><b>Lab No.</b><span>:</span>{report.labNo}</p><p><b>Lab Title</b><span>:</span>{report.labTitle}</p></div>
-          <div className="split"><div><h3>Submitted by:</h3><p>{report.studentName}</p><p>Roll: {report.roll}</p><p>Section: {report.section}</p></div><div><h3>Submitted to:</h3><p>{report.teacherName}</p><p>{report.teacherTitle}</p><p>Dept. of {report.department}, RUET</p></div></div>
-          <div className="dates"><p><b>Date of Experiment</b><span>:</span>{report.experimentDate||"—"}</p><p><b>Date of Submission</b><span>:</span>{report.submissionDate||"—"}</p></div>
-        </section>
+      <section className="preview-wrap"><div className="preview-title"><span>LAB REPORT PREVIEW</span><span>Times New Roman · 12 pt</span></div><article className="paper report-paper">
         <section className="report-body"><h1>Lab No. {report.labNo}: {report.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
-      </article><p className="attribution">Cover layout adapted from the MIT-licensed ruet-cover-page project.</p></section>
+      </article><p className="attribution">The downloaded PDF automatically places your completed cover before these report pages.</p></section>
     </section>
   </main>;
 }
