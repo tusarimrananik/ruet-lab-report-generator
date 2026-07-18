@@ -50,32 +50,17 @@
     "workbox-window": "^7.4.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.16",
     "@rsbuild/core": "^1.7.5",
     "@rsbuild/plugin-node-polyfill": "^1.4.5",
     "@rsbuild/plugin-react": "^1.4.6",
     "@rsdoctor/rspack-plugin": "^1.5.12",
     "@tailwindcss/typography": "^0.5.19",
-    "@types/bun": "latest",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "husky": "^9.1.7",
-    "knip": "^6.15.0",
-    "lint-staged": "^17.0.7",
-    "prettier": "^3.8.3",
-    "puppeteer": "^24.43.1",
     "tailwindcss": "^4.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^6.0.3",
-    "workbox-cli": "^7.4.1"
-  },
-  "lint-staged": {
-    "*": "biome check --write --unsafe --no-errors-on-unmatched",
-    "*.yaml": "prettier --write"
-  },
-  "prettier": {
-    "tabWidth": 2
+    "typescript": "^6.0.3"
   },
   "type": "module"
 }
