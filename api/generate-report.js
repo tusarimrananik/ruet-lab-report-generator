@@ -4,21 +4,6 @@ const MAX_REQUESTS = 5;
 const WINDOW_MS = 60 * 60 * 1000;
 const requestLog = new Map();
 
-const schema = {
-  type: 'object',
-  properties: {
-    objective: { type: 'string' },
-    theory: { type: 'string' },
-    code: { type: 'string' },
-    output: { type: 'string' },
-    verdict: { type: 'string' },
-    discussion: { type: 'string' },
-    conclusion: { type: 'string' },
-  },
-  required: ['objective', 'theory', 'code', 'output', 'verdict', 'discussion', 'conclusion'],
-  additionalProperties: false,
-};
-
 const getClientIp = request => String(request.headers['x-forwarded-for'] || request.socket?.remoteAddress || 'unknown').split(',')[0].trim();
 
 const isRateLimited = ip => {
@@ -56,8 +41,18 @@ export default async function handler(request, response) {
   const ip = getClientIp(request);
   if (isRateLimited(ip)) return response.status(429).json({ error: 'AI generation limit reached. Try again later.' });
 
-  const { courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', notes = '', sections = [] } = request.body || {};
+  const { courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', university = '', universityStatus = '', presetDepartment = '', semester = '', notes = '', sections = [] } = request.body || {};
   if (!String(labTitle).trim()) return response.status(400).json({ error: 'Add the lab title on the cover page first.' });
+
+  const safeSections = Array.isArray(sections) ? sections.slice(0, 12).filter(section => /^[a-z][a-z0-9_-]{0,39}$/.test(String(section.id || ''))) : [];
+  if (!safeSections.length) return response.status(400).json({ error: 'Add at least one valid report section.' });
+  const sectionIds = [...new Set(safeSections.map(section => String(section.id)))];
+  const schema = {
+    type: 'object',
+    properties: Object.fromEntries(sectionIds.map(id => [id, { type: 'string' }])),
+    required: sectionIds,
+    additionalProperties: false,
+  };
 
   const context = {
     courseCode: String(courseCode).slice(0, 40),
@@ -65,15 +60,19 @@ export default async function handler(request, response) {
     labNo: String(labNo).slice(0, 20),
     labTitle: String(labTitle).slice(0, 300),
     preset: String(preset).slice(0, 40),
+    university: String(university).slice(0, 160),
+    universityStatus: String(universityStatus).slice(0, 40),
+    department: String(presetDepartment).slice(0, 160),
+    semester: String(semester).slice(0, 20),
     notes: String(notes).slice(0, 6000),
-    existingSections: Array.isArray(sections) ? sections.slice(0, 12).map(section => ({
+    existingSections: safeSections.map(section => ({
       id: String(section.id || '').slice(0, 40),
       title: String(section.title || '').slice(0, 100),
       body: String(section.body || '').slice(0, 6000),
-    })) : [],
+    })),
   };
 
-  const instructions = `Write a concise, technically accurate RUET lab report using the supplied context. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly and follow this exact order: Objective, Theory, Assembly Language Code, Output, Verdict, Discussion, Conclusion. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase the verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
+  const instructions = `Write a concise, technically accurate lab report using the supplied academic context and the exact section keys provided. Treat university, department, semester, and report format only as writing context; never claim an official university policy, template, course code, or curriculum rule that is not supplied. A universityStatus of "demo structure" means the selection is explicitly non-authoritative. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase any result or verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
 
   try {
     const upstream = await fetch(GROQ_CHAT_URL, {
