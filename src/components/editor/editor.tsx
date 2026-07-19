@@ -129,12 +129,12 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         </Button>
       </TabsContent>
       <TabsContent value="subject" className={tabContentClass}>
-        <TypeAndCoverNo />
-        <FormItem label="Title">
+        <TypeAndCoverNo documentType={report.documentType} />
+        <FormItem label={`${report.documentType} Title`}>
           <TextAreaInput atom={editorStore.coverTitle} rows={3} />
           <FormDescription>leave empty if not applicable</FormDescription>
         </FormItem>
-        <DateOfExperiment />
+        <DateOfExperiment documentType={report.documentType} />
         <FormItem label="Date of submission">
           <DateInput atom={editorStore.dateOfSubmission} />
         </FormItem>
@@ -339,11 +339,9 @@ function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport
   );
 }
 
-function DateOfExperiment() {
-  const type = useAtomValue(editorStore.type);
-
+function DateOfExperiment({ documentType }: { documentType: DocumentType }) {
   return (
-    type === 'Lab Report' && (
+    documentType === 'Lab Report' && (
       <FormItem label="Date of experiment">
         <DateInput atom={editorStore.dateOfExperiment} />
       </FormItem>
@@ -351,15 +349,15 @@ function DateOfExperiment() {
   );
 }
 
-function TypeAndCoverNo() {
-  const type = useAtomValue(editorStore.type);
+function TypeAndCoverNo({ documentType }: { documentType: DocumentType }) {
   const [coverNo, setCoverNo] = useAtom(editorStore.coverNo);
+  const numberLabel = documentType === 'Lab Report' ? 'Lab No.' : `${documentType} No.`;
 
   return (
     <div>
-      {type !== 'Thesis' && (
+      {documentType !== 'Thesis' && (
         <FormItem
-          label={`${type} No.`}
+          label={numberLabel}
           actions={
             <Switch
               checked={coverNo !== ''}
