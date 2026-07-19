@@ -42,9 +42,6 @@ export type LabReport = {
 
 const styles = StyleSheet.create({
   page: { padding: 72, fontFamily: 'TeX Gyre Termes', fontSize: 12, lineHeight: 1.5 },
-  title: { marginBottom: 22, fontSize: 15, fontWeight: 700 },
-  titleUnderlined: { textDecoration: 'underline' },
-  titlePlain: { fontWeight: 400 },
   section: { marginBottom: 14 },
   heading: { marginBottom: 5, fontSize: 14, fontWeight: 700 },
   paragraph: { marginBottom: 4, textAlign: 'justify' },
@@ -56,17 +53,8 @@ const splitContent = (body: string) =>
   body.split(/(\[IMAGE:data:image\/[^\]]+\])/).filter(Boolean);
 
 export function ReportPage({ report }: { report: LabReport }) {
-  const documentTitle = report.documentType === 'Lab Report'
-    ? `Lab No. ${report.labNo}: ${report.labTitle}`
-    : report.labTitle || report.documentType;
-  const titleStyle = report.titleStyle === 'underlined'
-    ? [styles.title, styles.titleUnderlined]
-    : report.titleStyle === 'plain'
-      ? [styles.title, styles.titlePlain]
-      : styles.title;
   return (
       <Page size="A4" style={styles.page} wrap>
-        <Text style={titleStyle}>{documentTitle}</Text>
         {report.sections.map((section) => (
           <View key={section.id} style={styles.section}>
             <Text style={styles.heading}>{section.title}</Text>

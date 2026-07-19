@@ -1,9 +1,8 @@
 import { DownloadIcon } from '@radix-ui/react-icons';
 import { Document, pdf } from '@react-pdf/renderer';
-import { fileSave } from 'browser-fs-access';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
-import { type ComponentProps, type MouseEvent, useTransition } from 'react';
+import { type ComponentProps, type MouseEvent, useState } from 'react';
 import { defaultStore } from '@/store';
 import editor from '@/store/editor';
 import { CoverPage } from './cover-template';
@@ -14,7 +13,7 @@ export const PDFDownloadLink = ({
   report,
   ...props
 }: { report: LabReport } & ComponentProps<'button'>) => {
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const department = useAtomValue(editor.studentDepartment);
   const courseCode = useAtomValue(editor.courseNo);
   const courseTitle = useAtomValue(editor.courseTitle);
@@ -47,11 +46,12 @@ export const PDFDownloadLink = ({
     .replace(' ', '_')
     .replace(/[^a-zA-Z0-9.\-_]/g, '');
 
-  const handleClick = (
+  const handleClick = async (
     _event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
   ) => {
-    startTransition(async () => {
-      try {
+    if (isPending) return;
+    setIsPending(true);
+    try {
         const blob = await pdf(
           <Document title={`${completeReport.courseCode} ${completeReport.documentType}`}>
             <CoverPage report={completeReport} />
@@ -77,15 +77,21 @@ export const PDFDownloadLink = ({
           fileReader.readAsDataURL(blob);
           return;
         }
-        await fileSave(blob, {
-          fileName: fileNameClean,
-          extensions: ['.pdf'],
-        });
-      } catch (error) {
-        console.error(error);
-        alert('Could not download the complete report.');
-      }
-    });
+        const downloadUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadUrl;
+        downloadLink.download = fileNameClean;
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+        window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 60_000);
+    } catch (error) {
+      console.error(error);
+      alert('Could not download the complete report.');
+    } finally {
+      setIsPending(false);
+    }
     try {
       // @ts-expect-error
       window.umami?.track('download-cover-page', {
