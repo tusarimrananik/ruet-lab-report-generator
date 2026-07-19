@@ -14,10 +14,7 @@ export function TopbarLeft() {
     <div className="cover-pane-toolbar">
       <div className="cover-pane-title">
         <span className="cover-pane-icon"><img src={icon} alt="" /></span>
-        <div>
-          <span className="cover-pane-eyebrow">Document setup</span>
-          <h1>Cover Page <span className="max-sm:sr-only">Generator</span></h1>
-        </div>
+        <h1>Cover Page</h1>
       </div>
       <div className="flex items-center gap-2">
         <ModeToggle />
@@ -61,7 +58,6 @@ export function TopbarRight() {
         <ArrowLeftIcon className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Back</span>
       </Button>
-      <div className="cover-preview-label"><span>Live preview</span><small>A4 document</small></div>
       <div className="ms-auto">
         <Button variant="outline" size="icon" asChild>
           <PDFDownloadLink fileName={`${filename}.pdf`} />

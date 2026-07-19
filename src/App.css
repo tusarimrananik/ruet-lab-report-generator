@@ -8,23 +8,23 @@
 
 :root {
   --radius: 0.875rem;
-  --background: oklch(0.985 0.006 166);
-  --foreground: oklch(0.205 0.032 166);
+  --background: oklch(0.985 0.002 260);
+  --foreground: oklch(0.205 0.012 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.205 0.012 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
+  --popover-foreground: oklch(0.205 0.012 260);
   --primary: oklch(0.43 0.112 161);
   --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.955 0.018 161);
-  --secondary-foreground: oklch(0.28 0.055 161);
-  --muted: oklch(0.955 0.012 166);
-  --muted-foreground: oklch(0.49 0.025 166);
-  --accent: oklch(0.93 0.033 161);
-  --accent-foreground: oklch(0.3 0.075 161);
+  --secondary: oklch(0.96 0.003 260);
+  --secondary-foreground: oklch(0.28 0.012 260);
+  --muted: oklch(0.96 0.003 260);
+  --muted-foreground: oklch(0.5 0.012 260);
+  --accent: oklch(0.94 0.006 260);
+  --accent-foreground: oklch(0.28 0.012 260);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.89 0.018 166);
-  --input: oklch(0.87 0.022 166);
+  --border: oklch(0.89 0.006 260);
+  --input: oklch(0.86 0.007 260);
   --ring: oklch(0.58 0.11 161);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -42,19 +42,19 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.025 166);
+  --background: oklch(0.17 0.008 260);
   --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.215 0.029 166);
+  --card: oklch(0.215 0.009 260);
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
   --primary: oklch(0.72 0.125 157);
   --primary-foreground: oklch(0.17 0.025 166);
-  --secondary: oklch(0.25 0.034 166);
+  --secondary: oklch(0.25 0.009 260);
   --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.25 0.028 166);
+  --muted: oklch(0.25 0.009 260);
   --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.29 0.048 161);
+  --accent: oklch(0.29 0.012 260);
   --accent-foreground: oklch(0.984 0.003 247.858);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -151,8 +151,9 @@
 .studio-switcher-button.is-active { background: var(--card); color: color-mix(in oklab,var(--primary) 85%,var(--foreground)); box-shadow: 0 2px 8px rgb(15 70 52 / .1), inset 0 0 0 1px rgb(255 255 255 / .55); }
 .cover-workspace { position: fixed; inset: 0; display: flex; background: var(--background); }
 .cover-editor-pane { border-right: 1px solid var(--border); background: var(--background); }
-.cover-preview-pane { background: radial-gradient(circle at 50% 12%,#65766f 0,#44534e 48%,#33403c 100%); }
-.cover-pane-toolbar { display: flex; min-height: 4.35rem; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--border); background: color-mix(in oklab,var(--card) 92%,var(--secondary)); padding: .7rem 1rem; }
+.cover-preview-pane { background: #e5e7eb; }
+.dark .cover-preview-pane { background: #24272b; }
+.cover-pane-toolbar { display: flex; min-height: 3.75rem; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--border); background: var(--card); padding: .6rem .9rem; }
 .cover-pane-title { display: flex; align-items: center; gap: .65rem; }
 .cover-pane-icon { display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid color-mix(in oklab,var(--primary) 20%,var(--border)); border-radius: .7rem; background: color-mix(in oklab,var(--primary) 8%,var(--card)); }
 .cover-pane-icon img { width: 1.35rem; height: 1.35rem; }
@@ -161,18 +162,18 @@
 .cover-preview-label { display: flex; flex-direction: column; line-height: 1.1; }
 .cover-preview-label span { font-size: .78rem; font-weight: 700; }
 .cover-preview-label small { margin-top: .2rem; color: var(--muted-foreground); font-size: .62rem; }
-.cover-tabs { gap: .35rem; border-bottom: 1px solid var(--border); background: color-mix(in oklab,var(--secondary) 48%,var(--background)); padding: .55rem .7rem; }
+.cover-tabs { gap: .2rem; border-bottom: 1px solid var(--border); background: var(--background); padding: .45rem .55rem; }
 .cover-tab { gap: .45rem; border-radius: .65rem !important; padding: .62rem .45rem !important; color: var(--muted-foreground); font-size: .68rem; font-weight: 650; }
-.cover-tab[data-state="active"] { background: var(--card) !important; color: var(--primary) !important; box-shadow: 0 3px 10px rgb(13 74 54 / .08) !important; }
+.cover-tab[data-state="active"] { background: var(--secondary) !important; color: var(--primary) !important; box-shadow: none !important; }
 .cover-tab-link { display: flex; align-items: center; justify-content: center; border: 0; background: transparent; cursor: pointer; transition: color .18s,background .18s,box-shadow .18s; }
 .cover-tab-link:hover { background: color-mix(in oklab,var(--primary) 7%,var(--card)); color: var(--primary); }
 .cover-tab-content { scrollbar-color: color-mix(in oklab,var(--primary) 25%,transparent) transparent; }
 .cover-tab-content > h2 { margin: 0 0 .35rem; color: var(--foreground); font-size: 1.35rem; font-weight: 760; letter-spacing: -.035em; }
 .cover-tab-content label { color: var(--foreground); font-size: .77rem; font-weight: 650; }
-.cover-tab-content input, .cover-tab-content textarea, .cover-tab-content button[role="combobox"] { border-radius: .72rem; background: color-mix(in oklab,var(--card) 94%,var(--secondary)); transition: border-color .18s,box-shadow .18s; }
+.cover-tab-content input, .cover-tab-content textarea, .cover-tab-content button[role="combobox"] { border-radius: .6rem; background: var(--card); transition: border-color .18s,box-shadow .18s; }
 .cover-tab-content input:focus, .cover-tab-content textarea:focus, .cover-tab-content button[role="combobox"]:focus { border-color: color-mix(in oklab,var(--primary) 60%,var(--border)); box-shadow: 0 0 0 3px color-mix(in oklab,var(--primary) 13%,transparent); }
 .cover-preview-pane .react-pdf__Document { filter: drop-shadow(0 24px 32px rgb(0 0 0 / .28)); }
-.document-preview-stack { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2rem; overflow: auto; padding: 1.5rem 1.5rem 4rem; scrollbar-color: rgb(255 255 255 / .28) transparent; }
+.document-preview-stack { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 1.5rem; overflow: auto; padding: 1.25rem 1.25rem 3rem; scrollbar-color: rgb(0 0 0 / .22) transparent; }
 .document-preview-item { width: 100%; max-width: 850px; margin: 0 auto; }
 .document-preview-caption { display: flex; align-items: center; gap: .55rem; margin: 0 auto .65rem; color: rgb(255 255 255 / .82); font-size: .7rem; }
 .document-preview-caption span { display: grid; width: 1.45rem; height: 1.45rem; place-items: center; border: 1px solid rgb(255 255 255 / .18); border-radius: .45rem; background: rgb(255 255 255 / .08); font-size: .58rem; }

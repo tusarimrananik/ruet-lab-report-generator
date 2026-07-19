@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
 import { PDFDocument } from 'pdf-lib';
 import editorStore from '@/store/editor';
-import icon from '@/assets/icon.svg';
 import { academicTerms, getDepartment, getSessionalCourses, getUniversity, SessionalCourse, universities } from '@/data/report-presets';
 import { CoverTemplate } from './cover-template';
 import { LabReport, ReportDocument, ReportSection } from './report-pdf';
@@ -152,29 +151,23 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
   </article></div>;
   return <main className="report-studio integrated-report-editor">
-    <header className="report-toolbar">
-      <div className="report-title"><span className="report-title-icon"><img src={icon} alt=""/></span><div><small>Structured academic workspace</small><h1>Lab Report <span>Builder</span></h1></div></div>
-      <div className="report-actions"><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
-    </header>
     <section className="report-workspace">
       <aside className="report-editor">
-        <div className="report-editor-heading"><div><span className="report-eyebrow">Content editor</span><h2>Build your report</h2><p>Cover details are synchronized automatically.</p></div><span className="progress"><b>{complete}%</b> ready</span></div>
         <div className="report-panel">
+          <div className="report-utility-row"><span className="progress"><b>{complete}%</b> complete</span><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download PDF"}</Button></div>
           <div className="preset-card">
-            <div className="preset-card-heading"><div><strong>Report preset</strong><span>Choose the academic context used by the AI assistant.</span></div><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
+            <div className="preset-card-heading"><strong>Course</strong><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
             <div className="preset-grid">
               <label className="preset-field"><span>University</span><select className="report-select" value={report.university} onChange={e=>changeUniversity(e.target.value)}>{universities.map(university=><option key={university.id} value={university.id}>{university.shortName}{university.verified?" — Verified":" — Demo"}</option>)}</select></label>
               <label className="preset-field"><span>Department</span><select className="report-select" value={report.presetDepartment} onChange={e=>changeDepartment(e.target.value)}>{selectedUniversity.departments.map(department=><option key={department.code} value={department.code}>{department.code} — {department.name}</option>)}</select></label>
               <label className="preset-field"><span>Semester</span><select className="report-select" value={report.semester} onChange={e=>changeSemester(e.target.value)}>{academicTerms.map(term=><option key={term} value={term}>{term}</option>)}</select></label>
               <label className="preset-field course-field"><span>Sessional course</span><select className="report-select" value={selectedCourse?.code??""} disabled={!sessionalCourses.length} onChange={e=>changeCourse(e.target.value)}>{sessionalCourses.length?sessionalCourses.map(course=><option key={course.code} value={course.code}>{course.code} — {course.title}{selectedUniversity.verified?"":" — Demo"}</option>):<option value="">Verified course data not available yet</option>}</select></label>
             </div>
-            <div className="preset-source">{selectedUniversity.verified&&selectedDepartment.code==="CSE"?<><span>Sessional courses verified from your RUET CSE OBE Curriculum and Syllabus; department identity checked against the</span> <a href="https://www.ruet.ac.bd/faculty" target="_blank" rel="noreferrer">official RUET faculty directory</a>.</>:selectedUniversity.verified?<>This department is official, but its semester-by-semester curriculum source has not been added yet.</>:<>Sessional courses for {selectedUniversity.shortName} are demo data for now.</>}</div>
           </div>
-          <div className="report-note">The selected sessional course loads an appropriate report structure and guides AI generation. Cover-page details are still kept out of the lab-report pages.</div>
           <div className="ai-fill-card">
-            <div className="ai-fill-heading"><div><strong>AI report assistant</strong><span>Uses the cover details and anything already written.</span></div><span className="ai-badge">AI</span></div>
+            <div className="ai-fill-heading"><strong>AI assistant</strong><span className="ai-badge">AI</span></div>
             <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
-            <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating||!selectedCourse} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
+            <div className="ai-fill-actions">{aiMessage&&<span>{aiMessage}</span>}<Button type="button" size="sm" disabled={generating||!selectedCourse} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections"}</Button></div>
           </div>
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">+ Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>

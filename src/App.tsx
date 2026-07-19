@@ -55,11 +55,9 @@ const CoverApp = () => {
             {!isMobile || previewModeDebounced ? (
               <div className="document-preview-stack">
                 <section className="document-preview-item cover-preview-item">
-                  <div className="document-preview-caption"><span>01</span><strong>Cover Page</strong></div>
                   <PDFViewer className="cover-document-preview">{<CoverTemplate />}</PDFViewer>
                 </section>
                 <section className="document-preview-item report-document-preview">
-                  <div className="document-preview-caption"><span>02</span><strong>Lab Report</strong></div>
                   <LabReportGenerator view="preview" report={report} setReport={setReport} />
                 </section>
               </div>

@@ -68,7 +68,6 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         ))}
       </TabsList>
       <TabsContent value="student" className={tabContentClass}>
-        <h2>Student</h2>
         <SwitchInput
           atom={editorStore.manualSubmittedBy}
           label="Manual Input"
@@ -113,7 +112,6 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         </Button>
       </TabsContent>
       <TabsContent value="subject" className={tabContentClass}>
-        <h2>Subject</h2>
         <div className="grid gap-4 sm:grid-cols-[7rem_1fr]">
           <FormItem label={courseCode ? 'Course Code' : 'Course No.'}>
             <TextInput atom={editorStore.courseNo} />
@@ -141,7 +139,6 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         </Button>
       </TabsContent>
       <TabsContent value="teacher" className={tabContentClass}>
-        <h2>Teacher</h2>
         <FormItem label="Teacher Name">
           <TeacherName
             nameAtom={editorStore.teacherName}
@@ -212,7 +209,6 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         </Button>
       </TabsContent>
       <TabsContent value="settings" className={tabContentClass}>
-        <h2>Settings</h2>
         <SwitchInput
           atom={editorStore.formToBorder}
           label="Add borders to submitted by and submitted to table"
@@ -240,20 +236,15 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         />
         <div>
           <ImportExport />
-          <h3>Reset</h3>
-          <p>Feeling messy, want to start over?</p>
-          <p>
-            <Button
-              variant="destructive"
-              className=""
-              onClick={() => {
-                localStorage.clear();
-                window.location.reload();
-              }}
-            >
-              Reset all inputs and settings
-            </Button>
-          </p>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              localStorage.clear();
+              window.location.reload();
+            }}
+          >
+            Reset all inputs and settings
+          </Button>
         </div>
       </TabsContent>
       <TabsContent value="report" className="lab-report-tab-content flex-1 overflow-y-auto">
