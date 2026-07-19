@@ -149,7 +149,7 @@
 .studio-switcher-button { position: relative; border: 0; border-radius: .62rem; background: transparent; color: var(--muted-foreground); padding: .48rem .9rem; font-size: .76rem; font-weight: 650; cursor: pointer; transition: .2s ease; }
 .studio-switcher-button:hover { color: var(--foreground); }
 .studio-switcher-button.is-active { background: var(--card); color: color-mix(in oklab,var(--primary) 85%,var(--foreground)); box-shadow: 0 2px 8px rgb(15 70 52 / .1), inset 0 0 0 1px rgb(255 255 255 / .55); }
-.cover-workspace { position: fixed; inset: 4rem 0 0; display: flex; background: var(--background); }
+.cover-workspace { position: fixed; inset: 0; display: flex; background: var(--background); }
 .cover-editor-pane { border-right: 1px solid var(--border); background: var(--background); }
 .cover-preview-pane { background: radial-gradient(circle at 50% 12%,#65766f 0,#44534e 48%,#33403c 100%); }
 .cover-pane-toolbar { display: flex; min-height: 4.35rem; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; border-bottom: 1px solid var(--border); background: color-mix(in oklab,var(--card) 92%,var(--secondary)); padding: .7rem 1rem; }
@@ -172,7 +172,7 @@
 .cover-tab-content input, .cover-tab-content textarea, .cover-tab-content button[role="combobox"] { border-radius: .72rem; background: color-mix(in oklab,var(--card) 94%,var(--secondary)); transition: border-color .18s,box-shadow .18s; }
 .cover-tab-content input:focus, .cover-tab-content textarea:focus, .cover-tab-content button[role="combobox"]:focus { border-color: color-mix(in oklab,var(--primary) 60%,var(--border)); box-shadow: 0 0 0 3px color-mix(in oklab,var(--primary) 13%,transparent); }
 .cover-preview-pane .react-pdf__Document { filter: drop-shadow(0 24px 32px rgb(0 0 0 / .28)); }
-.report-app-shell { padding-top: 4rem; }
+.report-app-shell { padding-top: 0; }
 
 @media (max-width: 700px) {
   .studio-nav { height: 3.75rem; padding: 0 .7rem; }
@@ -180,8 +180,8 @@
   .studio-brand-mark img { width: 1.3rem; height: 1.3rem; }
   .studio-brand-copy small { display: none; }
   .studio-switcher-button { padding: .43rem .58rem; font-size: .68rem; }
-  .cover-workspace { top: 3.75rem; }
-  .report-app-shell { padding-top: 3.75rem; }
+  .cover-workspace { top: 0; }
+  .report-app-shell { padding-top: 0; }
   .cover-tab { flex-direction: column; gap: .25rem; }
   .cover-pane-toolbar { min-height: 4rem; }
 }

@@ -12,7 +12,6 @@ import { Update } from './components/update';
 import { cn } from './lib/utils';
 import { previewModeAtom } from './store/preview-mode';
 import LabReportGenerator from './components/lab-report-generator';
-import icon from './assets/icon.svg';
 import './lab-report.css';
 
 const mql = window.matchMedia('(max-width: 1023px)');
@@ -82,15 +81,6 @@ const App = () => {
 
   return (
     <>
-      <nav className="studio-nav">
-        <div className="studio-brand">
-          <span className="studio-brand-mark"><img src={icon} alt="" /></span>
-          <span className="studio-brand-copy">
-            <strong>RUET Report Studio</strong>
-            <small>Academic document workspace</small>
-          </span>
-        </div>
-      </nav>
       {tool === 'cover' ? (
         <CoverApp onOpenLabReport={() => setTool('report')} />
       ) : (

@@ -63,8 +63,8 @@
 @media print { nav, .report-toolbar, .report-editor, .report-preview-toolbar, .attribution { display: none !important; } .report-studio, .report-workspace, .report-preview-column { display: block; background: #fff; } .preview-wrap { padding: 0; background: #fff; } .paper { width: auto; margin: 0; box-shadow: none; } .report-body { padding: 25.4mm; } @page { size: A4; margin: 0; } }
 
 /* Unified RUET Report Studio experience */
-.report-studio { min-height: calc(100vh - 4rem); background: color-mix(in oklab,var(--background) 96%,#dff5eb); }
-.report-toolbar { top: 4rem; min-height: 4.5rem; padding: .7rem 1.15rem; border-color: var(--border); background: color-mix(in oklab,var(--card) 92%,var(--secondary)); box-shadow: 0 7px 22px rgb(11 71 51 / .055); backdrop-filter: blur(16px); }
+.report-studio { min-height: 100vh; background: color-mix(in oklab,var(--background) 96%,#dff5eb); }
+.report-toolbar { top: 0; min-height: 4.5rem; padding: .7rem 1.15rem; border-color: var(--border); background: color-mix(in oklab,var(--card) 92%,var(--secondary)); box-shadow: 0 7px 22px rgb(11 71 51 / .055); backdrop-filter: blur(16px); }
 .report-title { gap: .7rem; }
 .report-title-icon { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border: 1px solid color-mix(in oklab,var(--primary) 18%,var(--border)); border-radius: .78rem; background: color-mix(in oklab,var(--primary) 8%,var(--card)); }
 .report-title-icon img { width: 1.5rem; height: 1.5rem; }
@@ -116,4 +116,4 @@
 .paper { border-radius: 2px; box-shadow: 0 28px 70px rgb(0 0 0 / .3),0 2px 8px rgb(0 0 0 / .15); }
 .attribution { margin-top: 1rem; color: rgb(255 255 255 / .65); letter-spacing: .02em; }
 @media(max-width:1050px){.report-workspace{grid-template-columns:1fr}.report-preview-column{min-height:48rem}.report-panel{padding-bottom:2rem}}
-@media(max-width:700px){.report-toolbar{top:3.75rem;min-height:4rem;padding:.6rem .75rem}.report-title small{display:none}.report-title-icon{width:2rem;height:2rem}.report-title-icon img{width:1.25rem;height:1.25rem}.report-title h1{font-size:.95rem}.report-actions{gap:.35rem}.report-back{font-size:0!important;width:2rem;padding:0!important}.report-back::before{content:"←";font-size:.9rem}.report-download{font-size:.68rem!important;padding-inline:.7rem!important}.report-editor-heading{padding:1.1rem 1rem}.report-panel{padding:1rem}.preset-card,.ai-fill-card,.section-edit{border-radius:.8rem}.preview-wrap{padding:1rem .6rem 3rem}.paper{transform:scale(.62);margin-bottom:-420px}.report-preview-column{min-height:43rem}}
+@media(max-width:700px){.report-toolbar{top:0;min-height:4rem;padding:.6rem .75rem}.report-title small{display:none}.report-title-icon{width:2rem;height:2rem}.report-title-icon img{width:1.25rem;height:1.25rem}.report-title h1{font-size:.95rem}.report-actions{gap:.35rem}.report-back{font-size:0!important;width:2rem;padding:0!important}.report-back::before{content:"←";font-size:.9rem}.report-download{font-size:.68rem!important;padding-inline:.7rem!important}.report-editor-heading{padding:1.1rem 1rem}.report-panel{padding:1rem}.preset-card,.ai-fill-card,.section-edit{border-radius:.8rem}.preview-wrap{padding:1rem .6rem 3rem}.paper{transform:scale(.62);margin-bottom:-420px}.report-preview-column{min-height:43rem}}
