@@ -188,6 +188,7 @@
 .cover-document-preview { height: min(72vw, 1040px); min-height: 620px; border-radius: 2px; }
 .report-pdf-preview { width: 100%; }
 .report-pdf-preview .react-pdf__Page { overflow: hidden; border-radius: 2px; box-shadow: 0 18px 42px rgb(0 0 0 / .24); }
+.preview-error { border: 1px solid var(--border); border-radius: .65rem; background: var(--card); color: var(--muted-foreground); padding: 1rem; text-align: center; font-size: .75rem; }
 .lab-report-tab-content { scrollbar-color: color-mix(in oklab,var(--primary) 25%,transparent) transparent; }
 .report-app-shell { padding-top: 0; }
 

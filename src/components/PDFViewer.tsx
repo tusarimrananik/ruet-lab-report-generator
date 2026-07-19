@@ -154,3 +154,57 @@ export function PDFViewer({
     </div>
   );
 }
+
+export function PaginatedPDFViewer({
+  children,
+  className,
+  ...props
+}: {
+  children: React.ReactElement<DocumentProps>;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number>();
+  const [numPages, setNumPages] = useState(1);
+  const [instance] = usePDF({ document: children });
+
+  useResizeObserver({
+    ref: containerRef as RefObject<HTMLElement>,
+    onResize: ({ width: nextWidth }) => setWidth(nextWidth),
+  });
+
+  const pageWidth = Math.min(width ?? 794, 794);
+  const loading = (
+    <div
+      className="m-auto flex flex-col items-center justify-center gap-[4%] bg-white p-[16%]"
+      style={{ width: pageWidth, height: pageWidth * Math.SQRT2 }}
+    >
+      {coverSkeleton}
+    </div>
+  );
+
+  return (
+    <div ref={containerRef} className={cn('relative w-full', className)} {...props}>
+      {(instance.loading || !instance.blob) && loading}
+      {instance.error && (
+        <div className="preview-error">Could not render the live preview.</div>
+      )}
+      {instance.blob && !instance.error && (
+        <Document
+          file={instance.blob}
+          loading={loading}
+          className="m-auto flex flex-col gap-4"
+          onLoadSuccess={({ numPages: loadedPages }) => setNumPages(loadedPages)}
+        >
+          {Array.from({ length: numPages }, (_, index) => (
+            <Page
+              key={index + 1}
+              pageNumber={index + 1}
+              width={pageWidth}
+              loading={loading}
+            />
+          ))}
+        </Document>
+      )}
+    </div>
+  );
+}

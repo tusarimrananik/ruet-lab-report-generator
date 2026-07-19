@@ -7,7 +7,7 @@ import editorStore from '@/store/editor';
 import { getDocumentSections } from '@/data/document-presets';
 import { getDepartment, getSessionalCourses, getUniversity } from '@/data/report-presets';
 import { LabReport, ReportDocument } from './report-pdf';
-import { PDFViewer } from './PDFViewer';
+import { PaginatedPDFViewer } from './PDFViewer';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 
@@ -68,7 +68,7 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };
-  if(view === "preview") return <div className="integrated-report-preview"><PDFViewer allPages className="report-pdf-preview"><ReportDocument report={reportForExport}/></PDFViewer></div>;
+  if(view === "preview") return <div className="integrated-report-preview"><PaginatedPDFViewer className="report-pdf-preview"><ReportDocument report={reportForExport}/></PaginatedPDFViewer></div>;
   return <main className="report-studio integrated-report-editor">
     <section className="report-workspace">
       <aside className="report-editor">
