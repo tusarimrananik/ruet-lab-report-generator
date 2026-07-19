@@ -17,6 +17,8 @@ import { Textarea } from './ui/textarea';
 type Section = ReportSection;
 type Report = LabReport;
 
+const REPORT_DRAFT_STORAGE_KEY = "ruet-report-draft-v2";
+
 const makeSection = (id: string, title: string, placeholder: string, kind?: Section["kind"]): Section => ({
   id,
   title,
@@ -121,7 +123,7 @@ const normalizeDraft = (draft: Report): Report => {
 };
 
 export default function Home() {
-  const [report,setReport] = useState<Report>(()=>{if(typeof window==="undefined")return initial;const raw=localStorage.getItem("ruet-report-draft");if(!raw)return initial;try{return normalizeDraft(JSON.parse(raw))}catch{return initial}});
+  const [report,setReport] = useState<Report>(()=>{if(typeof window==="undefined")return initial;const raw=localStorage.getItem(REPORT_DRAFT_STORAGE_KEY);if(!raw)return initial;try{return normalizeDraft(JSON.parse(raw))}catch{return initial}});
   const [saved,setSaved] = useState("Draft saved locally");
   const [downloading,setDownloading] = useState(false);
   const [generating,setGenerating] = useState(false);
@@ -145,7 +147,7 @@ export default function Home() {
   const sessionalCourses=useMemo(()=>getSessionalCourses(report.university,report.presetDepartment,report.semester),[report.university,report.presetDepartment,report.semester]);
   const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0],[sessionalCourses,report.sessionalCourse]);
   const reportForExport=useMemo<Report>(()=>({...report,department,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
-  useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem("ruet-report-draft",JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
+  useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem(REPORT_DRAFT_STORAGE_KEY,JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
   const applyCourse=(r:Report,selected?:SessionalCourse):Report=>{
     if(!selected)return {...r,sessionalCourse:""};
