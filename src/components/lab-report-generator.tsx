@@ -94,7 +94,12 @@ const legacyAssemblyPrompts = new Set([
   "Summarize the concepts and practical skills learned from the experiment.",
 ]);
 
-const defaultSectionPrompts = new Set([\n  ...legacyAssemblyPrompts,\n  ...Object.values(presets).flatMap(preset => preset.sections.map(section => section.placeholder).filter(Boolean)),\n]);\n\nconst normalizeDraft = (draft: Report): Report => {
+const defaultSectionPrompts = new Set([
+  ...legacyAssemblyPrompts,
+  ...Object.values(presets).flatMap(preset => preset.sections.map(section => section.placeholder).filter(Boolean)),
+]);
+
+const normalizeDraft = (draft: Report): Report => {
   const normalized = {
     ...draft,
     university: draft.university || "ruet",
@@ -102,7 +107,8 @@ const defaultSectionPrompts = new Set([\n  ...legacyAssemblyPrompts,\n  ...Objec
     semester: draft.semester || "2-2",
     sessionalCourse: draft.sessionalCourse || (draft.preset === "assembly" ? "CSE 2206" : ""),
   };
-  const templateSections = presets[normalized.preset]?.sections;\n  if (!templateSections) return normalized;
+  const templateSections = presets[normalized.preset]?.sections;
+  if (!templateSections) return normalized;
   const existing = new Map(normalized.sections.map(section => [section.id, section]));
   return {
     ...normalized,
