@@ -122,7 +122,11 @@ export function PDFViewer({
     onResize,
   });
 
-  const [instance] = usePDF({ document: children });
+  const [instance, updateInstance] = usePDF({ document: children });
+
+  useEffect(() => {
+    updateInstance(children);
+  }, [children, updateInstance]);
 
   const [debouncedInstance, setDebouncedInstance] = useState(instance);
   const isLoadingRef = useRef(false);
@@ -165,7 +169,11 @@ export function PaginatedPDFViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number>();
   const [numPages, setNumPages] = useState(1);
-  const [instance] = usePDF({ document: children });
+  const [instance, updateInstance] = usePDF({ document: children });
+
+  useEffect(() => {
+    updateInstance(children);
+  }, [children, updateInstance]);
 
   useResizeObserver({
     ref: containerRef as RefObject<HTMLElement>,
