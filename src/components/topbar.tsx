@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import icon from '@/assets/icon.svg';
 import atoms from '@/store/editor';
 import { previewModeAtom } from '@/store/preview-mode';
-import { About } from './about';
 import { ModeToggle } from './mode-toggle';
 import PDFDownloadLink from './PDFDownloadLink';
 import { Button } from './ui/button';
@@ -20,7 +19,6 @@ export function TopbarLeft() {
         </h1>
       </div>
       <div className="flex items-center gap-2">
-        <About />
         <ModeToggle />
         <Button
           variant="outline"
