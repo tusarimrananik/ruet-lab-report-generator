@@ -129,7 +129,7 @@ const dataListItem = (key: string, value: string, keySize?: number, valueStyle =
 );
 
 // Create Document Component
-export function CoverTemplate({ report }: { report?: LabReport }) {
+export function CoverPage({ report }: { report?: LabReport }) {
   const department = useAtomValue(editorStore.studentDepartment);
   const storedType = useAtomValue(editorStore.type);
   const courseNo = useAtomValue(editorStore.courseNo);
@@ -318,7 +318,6 @@ export function CoverTemplate({ report }: { report?: LabReport }) {
   );
 
   return (
-    <Document title="Cover Page">
       <Page size="A4" style={styles.page}>
         {watermark && university.coverPreset.logo === 'ruet' && <Image src={RUETLogo} style={styles.watermark} />}
         <Text style={styles.motto}>{university.coverPreset.motto ?? ''}</Text>
@@ -416,6 +415,9 @@ export function CoverTemplate({ report }: { report?: LabReport }) {
           </View>
         )}
       </Page>
-    </Document>
   );
+}
+
+export function CoverTemplate({ report }: { report?: LabReport }) {
+  return <Document title="Cover Page"><CoverPage report={report} /></Document>;
 }

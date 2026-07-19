@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
 const splitContent = (body: string) =>
   body.split(/(\[IMAGE:data:image\/[^\]]+\])/).filter(Boolean);
 
-export function ReportDocument({ report }: { report: LabReport }) {
+export function ReportPage({ report }: { report: LabReport }) {
   const documentTitle = report.documentType === 'Lab Report'
     ? `Lab No. ${report.labNo}: ${report.labTitle}`
     : report.labTitle || report.documentType;
@@ -65,7 +65,6 @@ export function ReportDocument({ report }: { report: LabReport }) {
       ? [styles.title, styles.titlePlain]
       : styles.title;
   return (
-    <Document title={`${report.courseCode} ${report.documentType}`}>
       <Page size="A4" style={styles.page} wrap>
         <Text style={titleStyle}>{documentTitle}</Text>
         {report.sections.map((section) => (
@@ -81,6 +80,9 @@ export function ReportDocument({ report }: { report: LabReport }) {
           </View>
         ))}
       </Page>
-    </Document>
   );
+}
+
+export function ReportDocument({ report }: { report: LabReport }) {
+  return <Document title={`${report.courseCode} ${report.documentType}`}><ReportPage report={report} /></Document>;
 }

@@ -1,14 +1,13 @@
 import { DownloadIcon } from '@radix-ui/react-icons';
-import { pdf } from '@react-pdf/renderer';
+import { Document, pdf } from '@react-pdf/renderer';
 import { fileSave } from 'browser-fs-access';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
-import { PDFDocument } from 'pdf-lib';
 import { type ComponentProps, type MouseEvent, useTransition } from 'react';
 import { defaultStore } from '@/store';
 import editor from '@/store/editor';
-import { CoverTemplate } from './cover-template';
-import { type LabReport, ReportDocument } from './report-pdf';
+import { CoverPage } from './cover-template';
+import { type LabReport, ReportPage } from './report-pdf';
 import { LoadingSpinner } from './ui/loading-spinner';
 
 export const PDFDownloadLink = ({
@@ -53,18 +52,12 @@ export const PDFDownloadLink = ({
   ) => {
     startTransition(async () => {
       try {
-        const [coverBlob, reportBlob] = await Promise.all([
-          pdf(<CoverTemplate key={Math.random()} report={completeReport} />).toBlob(),
-          pdf(<ReportDocument report={completeReport} />).toBlob(),
-        ]);
-        const merged = await PDFDocument.create();
-        for (const sourceBlob of [coverBlob, reportBlob]) {
-          const source = await PDFDocument.load(await sourceBlob.arrayBuffer());
-          const pages = await merged.copyPages(source, source.getPageIndices());
-          pages.forEach((page) => merged.addPage(page));
-        }
-        const bytes = await merged.save();
-        const blob = new Blob([bytes.slice().buffer as ArrayBuffer], { type: 'application/pdf' });
+        const blob = await pdf(
+          <Document title={`${completeReport.courseCode} ${completeReport.documentType}`}>
+            <CoverPage report={completeReport} />
+            <ReportPage report={completeReport} />
+          </Document>,
+        ).toBlob();
         if (window.navigator.userAgent === 'ruet-cover-page-gen') {
           const fileReader = new FileReader();
           fileReader.onloadend = () => {

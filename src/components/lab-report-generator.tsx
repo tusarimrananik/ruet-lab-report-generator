@@ -6,7 +6,8 @@ import { useAtomValue } from 'jotai';
 import editorStore from '@/store/editor';
 import { getDocumentSections } from '@/data/document-presets';
 import { getDepartment, getSessionalCourses, getUniversity } from '@/data/report-presets';
-import { LabReport } from './report-pdf';
+import { LabReport, ReportDocument } from './report-pdf';
+import { PDFViewer } from './PDFViewer';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 
@@ -67,10 +68,7 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };
-  const documentTitle=report.documentType==="Lab Report"?`Lab No. ${reportForExport.labNo}: ${reportForExport.labTitle}`:reportForExport.labTitle||report.documentType;
-  if(view === "preview") return <div className="integrated-report-preview"><article className="paper report-paper">
-    <section className={`report-body title-${report.titleStyle}`}><h1>{documentTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Document figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
-  </article></div>;
+  if(view === "preview") return <div className="integrated-report-preview"><PDFViewer allPages className="report-pdf-preview"><ReportDocument report={reportForExport}/></PDFViewer></div>;
   return <main className="report-studio integrated-report-editor">
     <section className="report-workspace">
       <aside className="report-editor">
