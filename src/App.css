@@ -31,25 +31,26 @@
 }
 
 .dark {
-  --background: oklch(.18 .014 245);
+  --background: oklch(.176 .012 245);
   --foreground: oklch(.955 .008 245);
-  --card: oklch(.215 .016 245);
+  --card: oklch(.21 .014 245);
   --card-foreground: var(--foreground);
-  --popover: oklch(.235 .018 245);
+  --popover: oklch(.232 .016 245);
   --popover-foreground: var(--foreground);
   --primary: oklch(.7 .11 173);
   --primary-foreground: oklch(.16 .035 177);
-  --secondary: oklch(.255 .018 245);
+  --secondary: oklch(.25 .016 245);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(.255 .018 245);
-  --muted-foreground: oklch(.72 .02 245);
+  --muted: oklch(.25 .016 245);
+  --muted-foreground: oklch(.74 .018 245);
   --accent: oklch(.29 .035 177);
   --accent-foreground: oklch(.91 .06 173);
-  --border: oklch(.33 .018 245);
-  --input: oklch(.39 .02 245);
+  --border: oklch(.3 .016 245);
+  --input: oklch(.345 .018 245);
   --ring: oklch(.67 .1 173);
-  --sidebar: oklch(.145 .026 243);
+  --sidebar: oklch(.14 .024 243);
   --sidebar-foreground: oklch(.94 .008 245);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -127,31 +128,32 @@
   z-index: 40;
   border-bottom: 1px solid var(--border);
   background: var(--card);
-  padding: .65rem 1.25rem .75rem;
+  padding: .75rem 1.25rem .85rem;
 }
 .academic-preset-toggle { display: none; }
 .academic-preset-fields {
   display: grid;
-  grid-template-columns: .7fr .95fr .72fr .68fr 1.8fr .65fr;
-  gap: .85rem;
+  grid-template-columns: minmax(7.5rem, .72fr) minmax(9rem, .95fr) minmax(8rem, .74fr) minmax(7rem, .68fr) minmax(18rem, 1.9fr) minmax(7rem, .68fr);
+  gap: .75rem;
   align-items: end;
 }
-.academic-preset-fields label { display: flex; min-width: 0; flex-direction: column; gap: .32rem; }
-.academic-preset-fields label > span { color: var(--muted-foreground); font-size: .67rem; font-weight: 650; letter-spacing: .015em; }
+.academic-preset-fields label { display: flex; min-width: 0; flex-direction: column; gap: .38rem; }
+.academic-preset-fields label > span { color: var(--muted-foreground); font-size: .7rem; font-weight: 680; letter-spacing: .01em; }
 .academic-preset-fields select {
   width: 100%;
-  height: 2.55rem;
+  height: 2.7rem;
   min-width: 0;
   border: 1px solid var(--input);
   border-radius: .55rem;
   outline: 0;
-  background: var(--card);
+  background: color-mix(in oklab, var(--card) 88%, var(--background));
   color: var(--foreground);
-  padding: 0 .7rem;
+  padding: 0 2rem 0 .8rem;
   font-size: .78rem;
   font-weight: 600;
   transition: border-color .18s, box-shadow .18s;
 }
+.dark .academic-preset-fields select { background: color-mix(in oklab, var(--card) 82%, white 1%); }
 .academic-preset-fields select:focus { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 18%, transparent); }
 .academic-preset-fields select:disabled { cursor: not-allowed; opacity: .55; }
 
@@ -221,6 +223,11 @@
   background: var(--card);
   box-shadow: none;
   transition: border-color .18s, box-shadow .18s;
+}
+.dark .cover-tab-content input,
+.dark .cover-tab-content textarea,
+.dark .cover-tab-content button[role="combobox"] {
+  background: color-mix(in oklab, var(--card) 86%, white 1%);
 }
 .cover-tab-content textarea { line-height: 1.55; }
 .cover-tab-content input:focus,
@@ -299,6 +306,11 @@
   .cover-document-preview { height: 47rem; min-height: 0; }
 }
 
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .academic-preset-fields { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .academic-course-select { grid-column: span 3; }
+}
+
 @media (max-width: 560px) {
   .studio-header { gap: .45rem; padding: 0 .55rem; }
   .studio-identity { gap: .4rem; }
@@ -317,13 +329,53 @@
 }
 
 @layer components {
-  .react-date-picker__wrapper { min-height: 2.7rem; border-color: var(--input) !important; border-radius: .55rem; padding-inline: .55rem; }
+  .react-date-picker { min-height: 2.75rem; background: var(--card); }
+  .dark .react-date-picker { background: color-mix(in oklab, var(--card) 86%, white 1%); }
+  .react-date-picker__wrapper {
+    min-height: 2.7rem;
+    align-items: center;
+    border-color: var(--input) !important;
+    border-radius: .55rem;
+    padding: 0 .55rem 0 .75rem;
+  }
+  .react-date-picker__inputGroup { display: flex; min-width: 0; align-items: center; gap: .18rem; }
+  .react-date-picker__inputGroup__divider { color: var(--muted-foreground); }
+  .react-date-picker__button { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: .4rem; color: var(--muted-foreground); padding: 0; }
+  .react-date-picker__button:hover,
+  .react-date-picker__button:focus-visible { background: var(--secondary); color: var(--foreground); }
+  .react-date-picker__button svg { width: .95rem; height: .95rem; stroke: currentColor; }
+  .react-date-picker__calendar { color: var(--foreground); }
+  .react-calendar { border-color: var(--border) !important; border-radius: .65rem; background: var(--popover) !important; color: var(--popover-foreground); box-shadow: 0 18px 45px rgb(0 0 0 / .24); }
   .react-date-picker__calendar button:not(.react-calendar__tile--active):enabled:hover,
   .react-date-picker__calendar button:not(.react-calendar__tile--active):enabled:focus { @apply bg-secondary; }
-  select.react-date-picker__inputGroup__input:focus { @apply bg-background text-foreground; }
   .react-calendar__navigation button:disabled { @apply opacity-50 bg-neutral-500/25; }
   .dark .react-calendar__tile--now { @apply bg-cyan-950; }
   .dark .react-calendar__tile--hasActive { @apply bg-emerald-800; }
+}
+
+/* DatePicker renders small editable segments inside the main field. Keep those
+   segments visually flat so the control reads as one input, not several pills. */
+.cover-tab-content .react-date-picker__inputGroup input,
+.cover-tab-content .react-date-picker__inputGroup select {
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--foreground);
+  padding: .15rem .08rem;
+  box-shadow: none;
+  font-size: .78rem;
+  font-weight: 560;
+}
+.cover-tab-content .react-date-picker__inputGroup input:focus,
+.cover-tab-content .react-date-picker__inputGroup select:focus {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 @font-face {
