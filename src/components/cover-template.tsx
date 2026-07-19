@@ -183,6 +183,8 @@ export function CoverPage({ report }: { report?: LabReport }) {
 
   const university = getUniversity(report?.university ?? 'ruet');
   const type = report?.documentType ?? storedType;
+  const displayedCourseNo = report?.courseCode ?? courseNo;
+  const displayedCourseTitle = report?.courseTitle ?? courseTitle;
   const titleStyle = report?.titleStyle ?? 'bold';
   const titleTextStyle = titleStyle === 'underlined'
     ? styles.documentTitleUnderlined
@@ -340,9 +342,9 @@ export function CoverPage({ report }: { report?: LabReport }) {
             }}
           >
             <Text style={styles.text}>
-              {`${courseCode ? 'Course Code' : 'Course No.'}: ${courseNo}`}
+              {`${courseCode ? 'Course Code' : 'Course No.'}: ${displayedCourseNo}`}
             </Text>
-            <Text style={styles.text}>{`Course Title: ${courseTitle}`}</Text>
+            <Text style={styles.text}>{`Course Title: ${displayedCourseTitle}`}</Text>
           </View>
         )}
         <View
@@ -380,10 +382,10 @@ export function CoverPage({ report }: { report?: LabReport }) {
             <>
               {dataListItem(
                 courseCode ? 'Course Code' : 'Course No.',
-                courseNo,
+                displayedCourseNo,
                 90,
               )}
-              {dataListItem('Course Title', courseTitle, 90)}
+              {dataListItem('Course Title', displayedCourseTitle, 90)}
             </>
           )}
           {datesBellowTitle && dates}

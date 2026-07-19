@@ -15,8 +15,6 @@ export const PDFDownloadLink = ({
 }: { report: LabReport } & ComponentProps<'button'>) => {
   const [isPending, setIsPending] = useState(false);
   const department = useAtomValue(editor.studentDepartment);
-  const courseCode = useAtomValue(editor.courseNo);
-  const courseTitle = useAtomValue(editor.courseTitle);
   const labNo = useAtomValue(editor.coverNo);
   const labTitle = useAtomValue(editor.coverTitle);
   const experimentDate = useAtomValue(editor.dateOfExperiment);
@@ -29,8 +27,8 @@ export const PDFDownloadLink = ({
   const completeReport: LabReport = {
     ...report,
     department,
-    courseCode,
-    courseTitle,
+    courseCode: report.courseCode,
+    courseTitle: report.courseTitle,
     labNo,
     labTitle,
     experimentDate: experimentDate ? dayjs(experimentDate).format('YYYY-MM-DD') : '',
@@ -42,7 +40,7 @@ export const PDFDownloadLink = ({
     teacherName,
     teacherTitle,
   };
-  const fileNameClean = `${courseCode || 'RUET'}-${report.documentType.replace(/\s+/g, '-')}-${labNo || 'Document'}.pdf`
+  const fileNameClean = `${report.courseCode || 'RUET'}-${report.documentType.replace(/\s+/g, '-')}-${labNo || 'Document'}.pdf`
     .replace(' ', '_')
     .replace(/[^a-zA-Z0-9.\-_]/g, '');
 
@@ -96,8 +94,8 @@ export const PDFDownloadLink = ({
       // @ts-expect-error
       window.umami?.track('download-cover-page', {
         studentId: defaultStore.get(editor.studentID) || 'Blank',
-        courseNo: defaultStore.get(editor.courseNo) || 'Blank',
-        courseTitle: defaultStore.get(editor.courseTitle) || 'Blank',
+        courseNo: report.courseCode || 'Blank',
+        courseTitle: report.courseTitle || 'Blank',
         teacher: defaultStore.get(editor.teacherName) || 'Blank',
         watermark: defaultStore.get(editor.watermark) ? 'true' : 'false',
       });

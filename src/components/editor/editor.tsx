@@ -54,7 +54,6 @@ const tabContentClass = cn(
 export function Editor({ report, setReport }: { report: LabReport; setReport: Dispatch<SetStateAction<LabReport>> }) {
   const setTab = useSetAtom(editorStore.editorTab);
   const setPreviewMode = useSetAtom(previewModeAtom);
-  const courseCode = useAtomValue(editorStore.courseCode);
   const teacherName = useAtomValue(editorStore.teacherName);
   const secondTeacherName = useAtomValue(editorStore.secondTeacherName);
   const manualSubmittedBy = useAtomValue(editorStore.manualSubmittedBy);
@@ -130,14 +129,6 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
         </Button>
       </TabsContent>
       <TabsContent value="subject" className={tabContentClass}>
-        <div className="grid gap-4 sm:grid-cols-[7rem_1fr]">
-          <FormItem label={courseCode ? 'Course Code' : 'Course No.'}>
-            <TextInput atom={editorStore.courseNo} />
-          </FormItem>
-          <FormItem label="Course Title">
-            <TextInput atom={editorStore.courseTitle} />
-          </FormItem>
-        </div>
         <TypeAndCoverNo />
         <FormItem label="Title">
           <TextAreaInput atom={editorStore.coverTitle} rows={3} />
@@ -294,6 +285,8 @@ function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport
       documentType: nextDocumentType,
       preset: nextDocumentType === 'Lab Report' ? format : nextDocumentType.toLowerCase().replace(' ', '-'),
       sessionalCourse: course?.code ?? next.sessionalCourse,
+      courseCode: course?.code ?? next.courseCode,
+      courseTitle: course?.title ?? next.courseTitle,
       sections: mergeDocumentSections(report.sections, template),
     });
     setCoverType(nextDocumentType);

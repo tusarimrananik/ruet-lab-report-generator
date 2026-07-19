@@ -29,8 +29,6 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
   const [aiNotes,setAiNotes] = useState("");
   const [aiMessage,setAiMessage] = useState("");
   const department=useAtomValue(editorStore.studentDepartment);
-  const courseCode=useAtomValue(editorStore.courseNo);
-  const courseTitle=useAtomValue(editorStore.courseTitle);
   const labNo=useAtomValue(editorStore.coverNo);
   const labTitle=useAtomValue(editorStore.coverTitle);
   const experimentDate=useAtomValue(editorStore.dateOfExperiment);
@@ -43,8 +41,8 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
   const selectedUniversity=useMemo(()=>getUniversity(report.university),[report.university]);
   const selectedDepartment=useMemo(()=>getDepartment(report.university,report.presetDepartment),[report.university,report.presetDepartment]);
   const sessionalCourses=useMemo(()=>getSessionalCourses(report.university,report.presetDepartment,report.semester),[report.university,report.presetDepartment,report.semester]);
-  const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0]??{code:courseCode,title:courseTitle,format:"general" as const},[sessionalCourses,report.sessionalCourse,courseCode,courseTitle]);
-  const reportForExport=useMemo<Report>(()=>({...report,department:department||selectedDepartment.name,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,selectedDepartment.name,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
+  const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0]??{code:report.courseCode,title:report.courseTitle,format:"general" as const},[sessionalCourses,report.sessionalCourse,report.courseCode,report.courseTitle]);
+  const reportForExport=useMemo<Report>(()=>({...report,department:department||selectedDepartment.name,courseCode:selectedCourse.code,courseTitle:selectedCourse.title,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,selectedDepartment.name,selectedCourse,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
