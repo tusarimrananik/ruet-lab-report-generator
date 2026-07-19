@@ -29,7 +29,7 @@ import { TextInput } from './text-input';
 import { TextAreaInput } from './textarea-input';
 
 const tabContentClass = cn(
-  'flex-1 flex-col gap-y-4 overflow-y-auto p-4 data-[state=active]:flex prose dark:prose-invert max-w-full',
+  'cover-tab-content flex-1 flex-col gap-y-4 overflow-y-auto p-5 data-[state=active]:flex prose dark:prose-invert max-w-full',
 );
 
 export function Editor() {
@@ -48,17 +48,18 @@ export function Editor() {
       className="flex flex-1 flex-col overflow-hidden"
       atom={editorStore.editorTab}
     >
-      <TabsList className="h-auto w-full rounded-none">
+      <TabsList className="cover-tabs h-auto w-full rounded-none">
         {(
           [
-            ['student', PersonIcon],
-            ['subject', ReaderIcon],
-            ['teacher', IdCardIcon],
-            ['settings', MixerVerticalIcon],
+            ['student', PersonIcon, 'Student'],
+            ['subject', ReaderIcon, 'Subject'],
+            ['teacher', IdCardIcon, 'Teacher'],
+            ['settings', MixerVerticalIcon, 'Settings'],
           ] as const
-        ).map(([x, Icon]) => (
-          <TabsTrigger value={x} className="flex-1" key={x} aria-label={x}>
-            <Icon className="size-8" />
+        ).map(([x, Icon, label]) => (
+          <TabsTrigger value={x} className="cover-tab flex-1" key={x} aria-label={x}>
+            <Icon className="size-5" />
+            <span>{label}</span>
           </TabsTrigger>
         ))}
       </TabsList>

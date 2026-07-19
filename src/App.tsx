@@ -12,6 +12,7 @@ import { Update } from './components/update';
 import { cn } from './lib/utils';
 import { previewModeAtom } from './store/preview-mode';
 import LabReportGenerator from './components/lab-report-generator';
+import icon from './assets/icon.svg';
 import './lab-report.css';
 
 const mql = window.matchMedia('(max-width: 1023px)');
@@ -31,11 +32,11 @@ const CoverApp = () => {
   }, []);
 
   return (
-    <main className="fixed inset-x-0 bottom-0 top-12 flex divide-x">
+    <main className="cover-workspace">
       <QueryClientProvider client={queryClient}>
         <div
           className={cn(
-            'flex min-w-0 flex-1 origin-left flex-col divide-y transition-all',
+            'cover-editor-pane flex min-w-0 flex-1 origin-left flex-col transition-all',
             previewMode && 'max-lg:invisible max-lg:grow-0 max-lg:scale-x-0',
           )}
         >
@@ -45,7 +46,7 @@ const CoverApp = () => {
         {(!isMobile || previewMode) && (
           <div
             className={cn(
-              'flex min-w-0 flex-1 origin-left flex-col divide-y transition-all bg-neutral-500',
+              'cover-preview-pane flex min-w-0 flex-1 origin-left flex-col transition-all',
               previewMode || 'max-lg:invisible max-lg:grow-0 max-lg:scale-x-0',
             )}
           >
@@ -81,20 +82,28 @@ const App = () => {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-[100] flex h-12 items-center justify-between gap-3 border-b bg-secondary px-3">
-        <strong className="min-w-0 truncate text-sm font-semibold sm:text-base">RUET Report Studio</strong>
-        <div className="flex shrink-0 rounded-lg bg-muted p-1">
+      <nav className="studio-nav">
+        <div className="studio-brand">
+          <span className="studio-brand-mark"><img src={icon} alt="" /></span>
+          <span className="studio-brand-copy">
+            <strong>RUET Report Studio</strong>
+            <small>Academic document workspace</small>
+          </span>
+        </div>
+        <div className="studio-switcher" aria-label="Choose document tool">
           <button
             type="button"
-            className={cn('rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground', tool === 'cover' && 'bg-background text-foreground shadow-sm')}
+            className={cn('studio-switcher-button', tool === 'cover' && 'is-active')}
             onClick={() => setTool('cover')}
+            aria-pressed={tool === 'cover'}
           >
             Cover Page
           </button>
           <button
             type="button"
-            className={cn('rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground', tool === 'report' && 'bg-background text-foreground shadow-sm')}
+            className={cn('studio-switcher-button', tool === 'report' && 'is-active')}
             onClick={() => setTool('report')}
+            aria-pressed={tool === 'report'}
           >
             Lab Report
           </button>
@@ -103,7 +112,7 @@ const App = () => {
       {tool === 'cover' ? (
         <CoverApp />
       ) : (
-        <div className="pt-12">
+        <div className="report-app-shell">
           <LabReportGenerator />
         </div>
       )}

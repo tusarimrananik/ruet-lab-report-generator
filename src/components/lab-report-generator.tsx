@@ -151,12 +151,12 @@ export default function Home() {
   const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={reportForExport}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${reportForExport.courseCode || "RUET"}-Lab-${reportForExport.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
   return <main className="report-studio">
     <header className="report-toolbar">
-      <div className="report-title"><img src={icon} alt=""/><h1>Lab Report <span>Builder</span></h1></div>
-      <div className="report-actions"><Button size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
+      <div className="report-title"><span className="report-title-icon"><img src={icon} alt=""/></span><div><small>Structured academic workspace</small><h1>Lab Report <span>Builder</span></h1></div></div>
+      <div className="report-actions"><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
     </header>
     <section className="report-workspace">
       <aside className="report-editor">
-        <div className="report-editor-heading"><div><h2>Report Content</h2><p>Cover details are used automatically.</p></div><span className="progress">{complete}% ready</span></div>
+        <div className="report-editor-heading"><div><span className="report-eyebrow">Content editor</span><h2>Build your report</h2><p>Cover details are synchronized automatically.</p></div><span className="progress"><b>{complete}%</b> ready</span></div>
         <div className="report-panel">
           <div className="preset-card">
             <div className="preset-card-heading"><div><strong>Report preset</strong><span>Choose the academic context used by the AI assistant.</span></div><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
@@ -174,7 +174,7 @@ export default function Home() {
             <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
             <div className="ai-fill-actions"><span>{aiMessage||"Existing content will not be overwritten."}</span><Button type="button" size="sm" disabled={generating||!selectedCourse} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections with AI"}</Button></div>
           </div>
-          {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
+          {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">+ Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
       </aside>
       <section className="report-preview-column"><div className="report-preview-toolbar"><strong>Lab Report Preview</strong><span>Times New Roman · 12 pt</span></div><div className="preview-wrap"><article className="paper report-paper">

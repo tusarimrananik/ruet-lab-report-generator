@@ -11,12 +11,13 @@ import { Button } from './ui/button';
 export function TopbarLeft() {
   const setPreviewMode = useSetAtom(previewModeAtom);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary p-2">
-      <div className="flex items-center gap-2">
-        <img src={icon} alt="" className="h-8 w-auto" />
-        <h1 className="whitespace-nowrap font-semibold text-2xl">
-          Cover Page <span className="max-sm:sr-only">Generator</span>
-        </h1>
+    <div className="cover-pane-toolbar">
+      <div className="cover-pane-title">
+        <span className="cover-pane-icon"><img src={icon} alt="" /></span>
+        <div>
+          <span className="cover-pane-eyebrow">Document setup</span>
+          <h1>Cover Page <span className="max-sm:sr-only">Generator</span></h1>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <ModeToggle />
@@ -50,7 +51,7 @@ export function TopbarRight() {
   }, [courseNo, studentID, coverNo]);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 bg-secondary p-2">
+    <div className="cover-pane-toolbar cover-preview-header">
       <Button
         variant="outline"
         size="icon"
@@ -60,6 +61,7 @@ export function TopbarRight() {
         <ArrowLeftIcon className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Back</span>
       </Button>
+      <div className="cover-preview-label"><span>Live preview</span><small>A4 document</small></div>
       <div className="ms-auto">
         <Button variant="outline" size="icon" asChild>
           <PDFDownloadLink fileName={`${filename}.pdf`} />
