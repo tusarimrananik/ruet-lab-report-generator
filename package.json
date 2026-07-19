@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
-    "dev": "rsbuild dev --open",
+    "dev": "node scripts/dev.mjs",
     "format": "biome format --write",
     "preview": "rsbuild preview",
     "knip": "knip"

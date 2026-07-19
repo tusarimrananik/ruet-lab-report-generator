@@ -1,11 +1,12 @@
 import {
+  ChevronDownIcon,
   IdCardIcon,
   MixerVerticalIcon,
   PersonIcon,
   ReaderIcon,
 } from '@radix-ui/react-icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import type { Dispatch, SetStateAction } from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -61,8 +62,7 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
   useAtom(teacherEffect);
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <AcademicPresetBar report={report} setReport={setReport} />
+    <div className="editor-frame">
       <Tabs
       defaultValue="student"
       className="flex flex-1 flex-col overflow-hidden"
@@ -264,7 +264,8 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
   );
 }
 
-function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport: Dispatch<SetStateAction<LabReport>> }) {
+export function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport: Dispatch<SetStateAction<LabReport>> }) {
+  const [setupOpen, setSetupOpen] = useState(false);
   const setCoverType = useSetAtom(editorStore.type);
   const setStudentDepartment = useSetAtom(editorStore.studentDepartment);
   const setCourseNo = useSetAtom(editorStore.courseNo);
@@ -328,13 +329,20 @@ function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport
   };
 
   return (
-    <div className="academic-preset-bar">
-      <label><span>University</span><select value={report.university} onChange={(event) => changeUniversity(event.target.value)}>{enabledUniversities.map((item) => <option value={item.id} key={item.id}>{item.shortName}</option>)}</select></label>
-      <label><span>Document</span><select value={report.documentType} onChange={(event) => changeDocumentType(event.target.value as DocumentType)}>{documentTypes.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-      <label><span>Department</span><select value={report.presetDepartment} onChange={(event) => changeDepartment(event.target.value)}>{university.departments.map((item) => <option value={item.code} key={item.code}>{item.code}</option>)}</select></label>
-      <label><span>Semester</span><select value={report.semester} onChange={(event) => changeSemester(event.target.value)}>{academicTerms.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-      <label className="academic-course-select"><span>Course</span><select value={courses.some((item) => item.code === report.sessionalCourse) ? report.sessionalCourse : ''} disabled={!courses.length} onChange={(event) => changeCourse(event.target.value)}>{courses.length ? courses.map((item) => <option value={item.code} key={item.code}>{item.code} — {item.title}</option>) : <option value="">Enter manually</option>}</select></label>
-      <label><span>Style</span><select value={report.titleStyle} onChange={(event) => setReport((current) => ({ ...current, titleStyle: event.target.value as TitleStyle }))}>{titleStyles.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+    <div className={cn('academic-preset-bar', setupOpen && 'is-open')}>
+      <button type="button" className="academic-preset-toggle" aria-expanded={setupOpen} onClick={() => setSetupOpen((current) => !current)}>
+        <span>Document setup</span>
+        <strong>{university.shortName} · {report.documentType} · {report.sessionalCourse || 'No course'}</strong>
+        <ChevronDownIcon />
+      </button>
+      <div className="academic-preset-fields">
+        <label><span>University</span><select value={report.university} onChange={(event) => changeUniversity(event.target.value)}>{enabledUniversities.map((item) => <option value={item.id} key={item.id}>{item.shortName}</option>)}</select></label>
+        <label><span>Document</span><select value={report.documentType} onChange={(event) => changeDocumentType(event.target.value as DocumentType)}>{documentTypes.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+        <label><span>Department</span><select value={report.presetDepartment} onChange={(event) => changeDepartment(event.target.value)}>{university.departments.map((item) => <option value={item.code} key={item.code}>{item.code}</option>)}</select></label>
+        <label><span>Semester</span><select value={report.semester} onChange={(event) => changeSemester(event.target.value)}>{academicTerms.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+        <label className="academic-course-select"><span>Course</span><select value={courses.some((item) => item.code === report.sessionalCourse) ? report.sessionalCourse : ''} disabled={!courses.length} onChange={(event) => changeCourse(event.target.value)}>{courses.length ? courses.map((item) => <option value={item.code} key={item.code}>{item.code} — {item.title}</option>) : <option value="">Enter manually</option>}</select></label>
+        <label><span>Style</span><select value={report.titleStyle} onChange={(event) => setReport((current) => ({ ...current, titleStyle: event.target.value as TitleStyle }))}>{titleStyles.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+      </div>
     </div>
   );
 }

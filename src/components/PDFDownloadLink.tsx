@@ -111,7 +111,7 @@ export const PDFDownloadLink = ({
       ) : (
         <DownloadIcon className="h-[1.2rem] w-[1.2rem]" />
       )}
-      <span className="sr-only">Download</span>
+      <span className="download-label">Download PDF</span>
     </button>
   );
 };

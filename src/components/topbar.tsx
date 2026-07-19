@@ -1,55 +1,37 @@
-import { ArrowLeftIcon, EyeOpenIcon } from '@radix-ui/react-icons';
-import { useSetAtom } from 'jotai';
+import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons';
+import { useAtom } from 'jotai';
 import type { LabReport } from './report-pdf';
-import icon from '@/assets/icon.svg';
+import RUETLogo from '@/assets/RUET-Logo.png';
 import { previewModeAtom } from '@/store/preview-mode';
 import { ModeToggle } from './mode-toggle';
 import PDFDownloadLink from './PDFDownloadLink';
 import { Button } from './ui/button';
 
-export function TopbarLeft() {
-  const setPreviewMode = useSetAtom(previewModeAtom);
+export function StudioTopbar({ report }: { report: LabReport }) {
+  const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
   return (
-    <div className="cover-pane-toolbar">
-      <div className="cover-pane-title">
-        <span className="cover-pane-icon"><img src={icon} alt="" /></span>
-        <h1>Academic Document Builder</h1>
+    <header className="studio-header">
+      <div className="studio-identity">
+        <img src={RUETLogo} alt="RUET" />
+        <div>
+          <strong>RUET</strong>
+          <span>Document Builder</span>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="mobile-view-switch" aria-label="Workspace view">
+        <button type="button" aria-label="Editor" className={!previewMode ? 'is-active' : ''} onClick={() => setPreviewMode(false)}>
+          <Pencil2Icon /> <span>Editor</span>
+        </button>
+        <button type="button" aria-label="Preview" className={previewMode ? 'is-active' : ''} onClick={() => setPreviewMode(true)}>
+          <EyeOpenIcon /> <span>Preview</span>
+        </button>
+      </div>
+      <div className="studio-header-actions">
         <ModeToggle />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setPreviewMode(true)}
-          className="lg:hidden"
-        >
-          <EyeOpenIcon className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Back</span>
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-export function TopbarRight({ report }: { report: LabReport }) {
-  const setPreviewMode = useSetAtom(previewModeAtom);
-
-  return (
-    <div className="cover-pane-toolbar cover-preview-header">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setPreviewMode(false)}
-        className="lg:hidden"
-      >
-        <ArrowLeftIcon className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Back</span>
-      </Button>
-      <div className="ms-auto">
-        <Button variant="outline" size="icon" asChild>
+        <Button asChild className="studio-download">
           <PDFDownloadLink report={report} />
         </Button>
       </div>
-    </div>
+    </header>
   );
 }

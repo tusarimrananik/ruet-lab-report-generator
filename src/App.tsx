@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { CoverTemplate } from './components/cover-template';
-import { Editor } from './components/editor/editor';
+import { AcademicPresetBar, Editor } from './components/editor/editor';
 import { InApp } from './components/in-app';
 import { PDFViewer } from './components/PDFViewer';
-import { TopbarLeft, TopbarRight } from './components/topbar';
+import { StudioTopbar } from './components/topbar';
 import { Update } from './components/update';
 import { cn } from './lib/utils';
 import { previewModeAtom } from './store/preview-mode';
@@ -35,49 +35,42 @@ const CoverApp = () => {
   return (
     <main className="cover-workspace">
       <QueryClientProvider client={queryClient}>
-        <div
-          className={cn(
-            'cover-editor-pane flex min-w-0 flex-1 origin-left flex-col transition-all',
-            previewMode && 'max-lg:invisible max-lg:grow-0 max-lg:scale-x-0',
-          )}
-        >
-          <TopbarLeft />
-          <Editor report={report} setReport={setReport} />
-        </div>
-        {(!isMobile || previewMode) && (
+        <StudioTopbar report={report} />
+        <AcademicPresetBar report={report} setReport={setReport} />
+        <div className="cover-main-workspace">
           <div
             className={cn(
-              'cover-preview-pane flex min-w-0 flex-1 origin-left flex-col transition-all',
-              previewMode || 'max-lg:invisible max-lg:grow-0 max-lg:scale-x-0',
+              'cover-editor-pane min-w-0 origin-left transition-all',
+              previewMode && 'max-lg:hidden',
             )}
           >
-            <TopbarRight report={report} />
-            {!isMobile || previewModeDebounced ? (
-              <div className="document-preview-stack">
-                <section className="document-preview-item cover-preview-item">
-                  <PDFViewer className="cover-document-preview">{<CoverTemplate report={report} />}</PDFViewer>
-                </section>
-                <section className="document-preview-item report-document-preview">
-                  <LabReportGenerator view="preview" report={report} setReport={setReport} />
-                </section>
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  'relative flex overflow-hidden flex-1 grow shrink',
-                )}
-              >
-                <div className="absolute inset-0 flex justify-center items-center">
-                  <div className="lds-facebook text-neutral-700">
-                    <div></div>
-                    <div></div>
-                    <div></div>
+            <Editor report={report} setReport={setReport} />
+          </div>
+          {(!isMobile || previewMode) && (
+            <div className="cover-preview-pane min-w-0">
+              {!isMobile || previewModeDebounced ? (
+                <div className="document-preview-stack">
+                  <section className="document-preview-item cover-preview-item">
+                    <PDFViewer className="cover-document-preview">{<CoverTemplate report={report} />}</PDFViewer>
+                  </section>
+                  <section className="document-preview-item report-document-preview">
+                    <LabReportGenerator view="preview" report={report} setReport={setReport} />
+                  </section>
+                </div>
+              ) : (
+                <div className="relative flex min-h-0 flex-1 overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="lds-facebook text-neutral-700">
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </QueryClientProvider>
       <InApp />
       <Update />
