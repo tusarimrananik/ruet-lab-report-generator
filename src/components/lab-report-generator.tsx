@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import { pdf } from '@react-pdf/renderer';
 import { fileSave } from 'browser-fs-access';
 import dayjs from 'dayjs';
@@ -16,8 +16,6 @@ import { Textarea } from './ui/textarea';
 
 type Section = ReportSection;
 type Report = LabReport;
-
-const REPORT_DRAFT_STORAGE_KEY = "ruet-report-draft-v2";
 
 const makeSection = (id: string, title: string, placeholder: string, kind?: Section["kind"]): Section => ({
   id,
@@ -86,50 +84,12 @@ const initial: Report = {
   sections: presets.assembly.sections,
 };
 
-const legacyAssemblyPrompts = new Set([
-  "State the purpose of the experiment clearly. Use bullet points for multiple objectives.",
-  "Explain the instructions, registers, addressing modes, or concepts needed to understand the work.",
-  "; Paste complete, executable and commented code here",
-  "Add result screenshots below and describe important register, flag, memory, or output values.",
-  "State the final result and whether it matches the expected output.",
-  "Discuss how the program works, errors corrected, limitations, and possible improvements.",
-  "Summarize the concepts and practical skills learned from the experiment.",
-]);
-
-const defaultSectionPrompts = new Set([
-  ...legacyAssemblyPrompts,
-  ...Object.values(presets).flatMap(preset => preset.sections.map(section => section.placeholder).filter(Boolean)),
-]);
-
-const normalizeDraft = (draft: Report): Report => {
-  const normalized = {
-    ...draft,
-    university: draft.university || "ruet",
-    presetDepartment: draft.presetDepartment || "CSE",
-    semester: draft.semester || "2-2",
-    sessionalCourse: draft.sessionalCourse || (draft.preset === "assembly" ? "CSE 2206" : ""),
-  };
-  const templateSections = presets[normalized.preset]?.sections;
-  if (!templateSections) return normalized;
-  const existing = new Map(normalized.sections.map(section => [section.id, section]));
-  return {
-    ...normalized,
-    sections: templateSections.map(template => {
-      const saved = existing.get(template.id) ?? (template.id === "verdict" ? existing.get("result") : undefined);
-      const body = saved?.body && !defaultSectionPrompts.has(saved.body) ? saved.body : "";
-      return { ...template, body };
-    }),
-  };
-};
-
 export default function Home() {
-  const [report,setReport] = useState<Report>(()=>{if(typeof window==="undefined")return initial;const raw=localStorage.getItem(REPORT_DRAFT_STORAGE_KEY);if(!raw)return initial;try{return normalizeDraft(JSON.parse(raw))}catch{return initial}});
-  const [saved,setSaved] = useState("Draft saved locally");
+  const [report,setReport] = useState<Report>(initial);
   const [downloading,setDownloading] = useState(false);
   const [generating,setGenerating] = useState(false);
   const [aiNotes,setAiNotes] = useState("");
   const [aiMessage,setAiMessage] = useState("");
-  const fileRef=useRef<HTMLInputElement>(null);
   const department=useAtomValue(editorStore.studentDepartment);
   const courseCode=useAtomValue(editorStore.courseNo);
   const courseTitle=useAtomValue(editorStore.courseTitle);
@@ -147,7 +107,6 @@ export default function Home() {
   const sessionalCourses=useMemo(()=>getSessionalCourses(report.university,report.presetDepartment,report.semester),[report.university,report.presetDepartment,report.semester]);
   const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0],[sessionalCourses,report.sessionalCourse]);
   const reportForExport=useMemo<Report>(()=>({...report,department,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
-  useEffect(()=>{ const t=setTimeout(()=>{localStorage.setItem(REPORT_DRAFT_STORAGE_KEY,JSON.stringify(report));setSaved("Saved just now");},350); return()=>clearTimeout(t);},[report]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
   const applyCourse=(r:Report,selected?:SessionalCourse):Report=>{
     if(!selected)return {...r,sessionalCourse:""};
@@ -189,14 +148,11 @@ export default function Home() {
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };
-  const exportWord=()=>{const body=document.querySelector(".paper")?.innerHTML||"";const html=`<html><head><meta charset="utf-8"><style>@page{margin:1in}body{font-family:'Times New Roman';font-size:12pt;line-height:1.5}h1{font-size:15pt;margin:0 0 22pt}h2{font-size:14pt;margin:0 0 5pt}.report-section{margin:0 0 14pt}p{text-align:justify;white-space:pre-wrap}pre{font-family:'Courier New';font-size:11pt;line-height:1.3;border:1px solid #222;padding:10pt;white-space:pre-wrap}img{display:block;max-width:100%;margin:8pt auto}</style></head><body>${body}</body></html>`;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"application/msword"}));a.download=`${reportForExport.courseCode}-Lab-${reportForExport.labNo}.doc`;a.click();};
-  const backup=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(reportForExport,null,2)],{type:"application/json"}));a.download="ruet-lab-report.json";a.click()};
-  const importDraft=(e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{setReport(normalizeDraft(JSON.parse(String(rd.result))));}catch{alert("That file is not a valid report backup.")}};rd.readAsText(f)};
   const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={reportForExport}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${reportForExport.courseCode || "RUET"}-Lab-${reportForExport.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
   return <main className="report-studio">
     <header className="report-toolbar">
       <div className="report-title"><img src={icon} alt=""/><h1>Lab Report <span>Builder</span></h1></div>
-      <div className="report-actions"><span className="saved"><i/> {saved}</span><Button variant="outline" size="sm" className="quiet" onClick={backup}>Backup</Button><Button variant="outline" size="sm" className="quiet" onClick={()=>fileRef.current?.click()}>Import</Button><input ref={fileRef} hidden type="file" accept="application/json" onChange={importDraft}/><Button variant="outline" size="sm" className="quiet" onClick={exportWord}>Word</Button><Button size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
+      <div className="report-actions"><Button size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
     </header>
     <section className="report-workspace">
       <aside className="report-editor">
