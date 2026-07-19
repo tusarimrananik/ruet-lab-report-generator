@@ -64,7 +64,7 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
         filled+=1;
         return {...section,body:generated};
       })}));
-      setAiMessage(filled?`AI filled ${filled} empty section${filled===1?"":"s"}. Review the content before downloading.`:"There were no empty sections to fill.");
+      setAiMessage(filled?(data.demo?`Groq is rate-limiting requests. Added longer demo content to ${filled} empty section${filled===1?"":"s"}; replace and verify it before submission.`:`AI filled ${filled} empty section${filled===1?"":"s"}. Review the content before downloading.`):"There were no empty sections to fill.");
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };

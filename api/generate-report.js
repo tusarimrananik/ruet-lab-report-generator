@@ -4,6 +4,25 @@ const MAX_REQUESTS = 5;
 const WINDOW_MS = 60 * 60 * 1000;
 const requestLog = new Map();
 
+const createDemoSections = (sections, context) => Object.fromEntries(
+  sections.map(section => {
+    const title = String(section.title || section.id || 'Section');
+    const topic = context.labTitle || context.courseTitle || 'the selected academic topic';
+    const isCode = String(section.kind || '') === 'code' || /code|program/i.test(title);
+    const isReference = /reference|bibliograph/i.test(title);
+
+    if (isCode) {
+      return [section.id, `; DEMO CONTENT — replace this with your verified, runnable code before submission.\n; Topic: ${topic}\n\n; 1. Define the required data, constants, variables, or inputs.\n; 2. Initialize the program environment and any registers or resources.\n; 3. Implement the main operation in small, testable steps.\n; 4. Store or display the result using the method required by the course.\n; 5. End the program safely and document the expected output.\n\n; This temporary example is intentionally descriptive rather than executable.\n; Add the actual source code, test inputs, observed output, and necessary comments.`];
+    }
+
+    if (isReference) {
+      return [section.id, `Demo content — replace these placeholders with sources that you actually consulted.\n\n[1] Course teacher or department, “Relevant course handout or laboratory instruction,” current academic term.\n[2] Author name, Title of a Relevant Textbook, edition, publisher, year.\n[3] Author name, “Title of a Relevant Journal or Conference Paper,” publication, volume, issue, pages, year.\n[4] Organization or author, “Title of a Reliable Online Resource,” URL and access date.\n\nUse the citation style required by the teacher or university. Verify every author, title, year, URL, and publication detail before submission.`];
+    }
+
+    return [section.id, `Demo content — review, replace, and verify this section before submission.\n\nThe ${title.toLowerCase()} section for “${topic}” should explain its purpose in direct academic language and connect it clearly to the selected course. Begin by identifying the central task, concept, or question. Then describe the relevant background, assumptions, materials, methods, or reasoning needed to understand the work. Keep technical terms consistent and add equations, diagrams, examples, or citations wherever they are genuinely required.\n\nA complete version should also explain how the work was carried out or evaluated. Present the important steps in a logical order, distinguish supplied information from observed information, and record values with appropriate units. Any result should be supported by actual calculation, execution, measurement, or evidence. Do not present an expected result as an observed result.\n\nFinally, relate the section back to the document objective and course learning outcome. Discuss important limitations, possible sources of error, and decisions that affected the outcome. Replace this temporary demo text with information from the real task, teacher instructions, verified sources, and your own observations before downloading the final document.`];
+  }),
+);
+
 const getClientIp = request => String(request.headers['x-forwarded-for'] || request.socket?.remoteAddress || 'unknown').split(',')[0].trim();
 
 const isRateLimited = ip => {
@@ -111,7 +130,11 @@ export default async function handler(request, response) {
         return response.status(503).json({ error: 'The configured Groq API key is invalid.' });
       }
       if (upstream.status === 429) {
-        return response.status(429).json({ error: 'Groq is rate-limiting requests. Try again shortly.' });
+        return response.status(200).json({
+          sections: createDemoSections(safeSections, context),
+          demo: true,
+          message: 'Groq is rate-limiting requests, so temporary demo content was used.',
+        });
       }
       return response.status(502).json({ error: 'AI generation is temporarily unavailable.' });
     }
