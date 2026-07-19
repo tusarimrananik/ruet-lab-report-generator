@@ -18,7 +18,7 @@ import './lab-report.css';
 const mql = window.matchMedia('(max-width: 1023px)');
 const queryClient = new QueryClient();
 
-const CoverApp = () => {
+const CoverApp = ({ onOpenLabReport }: { onOpenLabReport: () => void }) => {
   const previewMode = useAtomValue(previewModeAtom);
   const [isMobile, setIsMobile] = useState(mql.matches);
   const [previewModeDebounced] = useDebounce(previewMode, 350);
@@ -41,7 +41,7 @@ const CoverApp = () => {
           )}
         >
           <TopbarLeft />
-          <Editor />
+          <Editor onOpenLabReport={onOpenLabReport} />
         </div>
         {(!isMobile || previewMode) && (
           <div
@@ -90,30 +90,12 @@ const App = () => {
             <small>Academic document workspace</small>
           </span>
         </div>
-        <div className="studio-switcher" aria-label="Choose document tool">
-          <button
-            type="button"
-            className={cn('studio-switcher-button', tool === 'cover' && 'is-active')}
-            onClick={() => setTool('cover')}
-            aria-pressed={tool === 'cover'}
-          >
-            Cover Page
-          </button>
-          <button
-            type="button"
-            className={cn('studio-switcher-button', tool === 'report' && 'is-active')}
-            onClick={() => setTool('report')}
-            aria-pressed={tool === 'report'}
-          >
-            Lab Report
-          </button>
-        </div>
       </nav>
       {tool === 'cover' ? (
-        <CoverApp />
+        <CoverApp onOpenLabReport={() => setTool('report')} />
       ) : (
         <div className="report-app-shell">
-          <LabReportGenerator />
+          <LabReportGenerator onBackToCover={() => setTool('cover')} />
         </div>
       )}
     </>

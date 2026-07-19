@@ -32,7 +32,7 @@ const tabContentClass = cn(
   'cover-tab-content flex-1 flex-col gap-y-4 overflow-y-auto p-5 data-[state=active]:flex prose dark:prose-invert max-w-full',
 );
 
-export function Editor() {
+export function Editor({ onOpenLabReport }: { onOpenLabReport: () => void }) {
   const setTab = useSetAtom(editorStore.editorTab);
   const setPreviewMode = useSetAtom(previewModeAtom);
   const courseCode = useAtomValue(editorStore.courseCode);
@@ -62,6 +62,10 @@ export function Editor() {
             <span>{label}</span>
           </TabsTrigger>
         ))}
+        <button type="button" className="cover-tab cover-tab-link flex-1" onClick={onOpenLabReport} aria-label="Lab Report">
+          <ReaderIcon className="size-5" />
+          <span>Lab Report</span>
+        </button>
       </TabsList>
       <TabsContent value="student" className={tabContentClass}>
         <h2>Student</h2>

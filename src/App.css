@@ -164,6 +164,8 @@
 .cover-tabs { gap: .35rem; border-bottom: 1px solid var(--border); background: color-mix(in oklab,var(--secondary) 48%,var(--background)); padding: .55rem .7rem; }
 .cover-tab { gap: .45rem; border-radius: .65rem !important; padding: .62rem .45rem !important; color: var(--muted-foreground); font-size: .68rem; font-weight: 650; }
 .cover-tab[data-state="active"] { background: var(--card) !important; color: var(--primary) !important; box-shadow: 0 3px 10px rgb(13 74 54 / .08) !important; }
+.cover-tab-link { display: flex; align-items: center; justify-content: center; border: 0; background: transparent; cursor: pointer; transition: color .18s,background .18s,box-shadow .18s; }
+.cover-tab-link:hover { background: color-mix(in oklab,var(--primary) 7%,var(--card)); color: var(--primary); }
 .cover-tab-content { scrollbar-color: color-mix(in oklab,var(--primary) 25%,transparent) transparent; }
 .cover-tab-content > h2 { margin: 0 0 .35rem; color: var(--foreground); font-size: 1.35rem; font-weight: 760; letter-spacing: -.035em; }
 .cover-tab-content label { color: var(--foreground); font-size: .77rem; font-weight: 650; }

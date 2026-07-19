@@ -84,7 +84,7 @@ const initial: Report = {
   sections: presets.assembly.sections,
 };
 
-export default function Home() {
+export default function Home({ onBackToCover }: { onBackToCover: () => void }) {
   const [report,setReport] = useState<Report>(initial);
   const [downloading,setDownloading] = useState(false);
   const [generating,setGenerating] = useState(false);
@@ -152,7 +152,7 @@ export default function Home() {
   return <main className="report-studio">
     <header className="report-toolbar">
       <div className="report-title"><span className="report-title-icon"><img src={icon} alt=""/></span><div><small>Structured academic workspace</small><h1>Lab Report <span>Builder</span></h1></div></div>
-      <div className="report-actions"><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
+      <div className="report-actions"><Button className="report-back" variant="outline" size="sm" onClick={onBackToCover}>Back to Cover Page</Button><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
     </header>
     <section className="report-workspace">
       <aside className="report-editor">
