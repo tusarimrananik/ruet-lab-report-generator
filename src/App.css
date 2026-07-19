@@ -172,6 +172,13 @@
 .cover-tab-content input, .cover-tab-content textarea, .cover-tab-content button[role="combobox"] { border-radius: .72rem; background: color-mix(in oklab,var(--card) 94%,var(--secondary)); transition: border-color .18s,box-shadow .18s; }
 .cover-tab-content input:focus, .cover-tab-content textarea:focus, .cover-tab-content button[role="combobox"]:focus { border-color: color-mix(in oklab,var(--primary) 60%,var(--border)); box-shadow: 0 0 0 3px color-mix(in oklab,var(--primary) 13%,transparent); }
 .cover-preview-pane .react-pdf__Document { filter: drop-shadow(0 24px 32px rgb(0 0 0 / .28)); }
+.document-preview-stack { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2rem; overflow: auto; padding: 1.5rem 1.5rem 4rem; scrollbar-color: rgb(255 255 255 / .28) transparent; }
+.document-preview-item { width: 100%; max-width: 850px; margin: 0 auto; }
+.document-preview-caption { display: flex; align-items: center; gap: .55rem; margin: 0 auto .65rem; color: rgb(255 255 255 / .82); font-size: .7rem; }
+.document-preview-caption span { display: grid; width: 1.45rem; height: 1.45rem; place-items: center; border: 1px solid rgb(255 255 255 / .18); border-radius: .45rem; background: rgb(255 255 255 / .08); font-size: .58rem; }
+.document-preview-caption strong { font-weight: 650; letter-spacing: .025em; }
+.cover-document-preview { height: min(72vw, 1040px); min-height: 620px; border-radius: 2px; }
+.lab-report-tab-content { scrollbar-color: color-mix(in oklab,var(--primary) 25%,transparent) transparent; }
 .report-app-shell { padding-top: 0; }
 
 @media (max-width: 700px) {
@@ -183,6 +190,8 @@
   .cover-workspace { top: 0; }
   .report-app-shell { padding-top: 0; }
   .cover-tab { flex-direction: column; gap: .25rem; }
+  .document-preview-stack { gap: 1.25rem; padding: 1rem .5rem 3rem; }
+  .cover-document-preview { height: 760px; min-height: 0; }
   .cover-pane-toolbar { min-height: 4rem; }
 }
 

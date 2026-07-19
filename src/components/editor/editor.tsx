@@ -5,6 +5,7 @@ import {
   ReaderIcon,
 } from '@radix-ui/react-icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import type { Dispatch, SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -27,12 +28,14 @@ import { SwitchInput } from './switch-input';
 import { TeacherName } from './teacher-name';
 import { TextInput } from './text-input';
 import { TextAreaInput } from './textarea-input';
+import LabReportGenerator from '../lab-report-generator';
+import type { LabReport } from '../report-pdf';
 
 const tabContentClass = cn(
   'cover-tab-content flex-1 flex-col gap-y-4 overflow-y-auto p-5 data-[state=active]:flex prose dark:prose-invert max-w-full',
 );
 
-export function Editor({ onOpenLabReport }: { onOpenLabReport: () => void }) {
+export function Editor({ report, setReport }: { report: LabReport; setReport: Dispatch<SetStateAction<LabReport>> }) {
   const setTab = useSetAtom(editorStore.editorTab);
   const setPreviewMode = useSetAtom(previewModeAtom);
   const courseCode = useAtomValue(editorStore.courseCode);
@@ -55,6 +58,7 @@ export function Editor({ onOpenLabReport }: { onOpenLabReport: () => void }) {
             ['subject', ReaderIcon, 'Subject'],
             ['teacher', IdCardIcon, 'Teacher'],
             ['settings', MixerVerticalIcon, 'Settings'],
+            ['report', ReaderIcon, 'Lab Report'],
           ] as const
         ).map(([x, Icon, label]) => (
           <TabsTrigger value={x} className="cover-tab flex-1" key={x} aria-label={x}>
@@ -62,10 +66,6 @@ export function Editor({ onOpenLabReport }: { onOpenLabReport: () => void }) {
             <span>{label}</span>
           </TabsTrigger>
         ))}
-        <button type="button" className="cover-tab cover-tab-link flex-1" onClick={onOpenLabReport} aria-label="Lab Report">
-          <ReaderIcon className="size-5" />
-          <span>Lab Report</span>
-        </button>
       </TabsList>
       <TabsContent value="student" className={tabContentClass}>
         <h2>Student</h2>
@@ -255,6 +255,9 @@ export function Editor({ onOpenLabReport }: { onOpenLabReport: () => void }) {
             </Button>
           </p>
         </div>
+      </TabsContent>
+      <TabsContent value="report" className="lab-report-tab-content flex-1 overflow-y-auto">
+        <LabReportGenerator view="editor" report={report} setReport={setReport} />
       </TabsContent>
     </Tabs>
   );

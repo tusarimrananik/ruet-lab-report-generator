@@ -11,16 +11,18 @@ import { TopbarLeft, TopbarRight } from './components/topbar';
 import { Update } from './components/update';
 import { cn } from './lib/utils';
 import { previewModeAtom } from './store/preview-mode';
-import LabReportGenerator from './components/lab-report-generator';
+import LabReportGenerator, { initialLabReport } from './components/lab-report-generator';
+import type { LabReport } from './components/report-pdf';
 import './lab-report.css';
 
 const mql = window.matchMedia('(max-width: 1023px)');
 const queryClient = new QueryClient();
 
-const CoverApp = ({ onOpenLabReport }: { onOpenLabReport: () => void }) => {
+const CoverApp = () => {
   const previewMode = useAtomValue(previewModeAtom);
   const [isMobile, setIsMobile] = useState(mql.matches);
   const [previewModeDebounced] = useDebounce(previewMode, 350);
+  const [report, setReport] = useState<LabReport>(initialLabReport);
 
   useEffect(() => {
     const handleChange = (event: { matches: boolean }) =>
@@ -40,7 +42,7 @@ const CoverApp = ({ onOpenLabReport }: { onOpenLabReport: () => void }) => {
           )}
         >
           <TopbarLeft />
-          <Editor onOpenLabReport={onOpenLabReport} />
+          <Editor report={report} setReport={setReport} />
         </div>
         {(!isMobile || previewMode) && (
           <div
@@ -51,7 +53,16 @@ const CoverApp = ({ onOpenLabReport }: { onOpenLabReport: () => void }) => {
           >
             <TopbarRight />
             {!isMobile || previewModeDebounced ? (
-              <PDFViewer className="flex-1">{<CoverTemplate />}</PDFViewer>
+              <div className="document-preview-stack">
+                <section className="document-preview-item cover-preview-item">
+                  <div className="document-preview-caption"><span>01</span><strong>Cover Page</strong></div>
+                  <PDFViewer className="cover-document-preview">{<CoverTemplate />}</PDFViewer>
+                </section>
+                <section className="document-preview-item report-document-preview">
+                  <div className="document-preview-caption"><span>02</span><strong>Lab Report</strong></div>
+                  <LabReportGenerator view="preview" report={report} setReport={setReport} />
+                </section>
+              </div>
             ) : (
               <div
                 className={cn(
@@ -77,19 +88,7 @@ const CoverApp = ({ onOpenLabReport }: { onOpenLabReport: () => void }) => {
 };
 
 const App = () => {
-  const [tool, setTool] = useState<'cover' | 'report'>('cover');
-
-  return (
-    <>
-      {tool === 'cover' ? (
-        <CoverApp onOpenLabReport={() => setTool('report')} />
-      ) : (
-        <div className="report-app-shell">
-          <LabReportGenerator onBackToCover={() => setTool('cover')} />
-        </div>
-      )}
-    </>
-  );
+  return <CoverApp />;
 };
 
 export default App;

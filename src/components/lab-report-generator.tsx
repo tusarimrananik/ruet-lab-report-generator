@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useMemo, useState } from "react";
 import { pdf } from '@react-pdf/renderer';
 import { fileSave } from 'browser-fs-access';
 import dayjs from 'dayjs';
@@ -74,7 +74,7 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
   ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
 };
 
-const initial: Report = {
+export const initialLabReport: Report = {
   preset:"assembly", university:"ruet", presetDepartment:"CSE", semester:"2-2", sessionalCourse:"CSE 2206",
   department:"Computer Science & Engineering", courseCode:"CSE 2206",
   courseTitle:"Microprocessors, Microcontrollers and Assembly Language Sessional", labNo:"01",
@@ -84,8 +84,7 @@ const initial: Report = {
   sections: presets.assembly.sections,
 };
 
-export default function Home({ onBackToCover }: { onBackToCover: () => void }) {
-  const [report,setReport] = useState<Report>(initial);
+export default function Home({ view, report, setReport }: { view: "editor" | "preview"; report: Report; setReport: Dispatch<SetStateAction<Report>> }) {
   const [downloading,setDownloading] = useState(false);
   const [generating,setGenerating] = useState(false);
   const [aiNotes,setAiNotes] = useState("");
@@ -149,10 +148,13 @@ export default function Home({ onBackToCover }: { onBackToCover: () => void }) {
     finally{setGenerating(false)}
   };
   const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={reportForExport}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${reportForExport.courseCode || "RUET"}-Lab-${reportForExport.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
-  return <main className="report-studio">
+  if(view === "preview") return <div className="integrated-report-preview"><article className="paper report-paper">
+    <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
+  </article></div>;
+  return <main className="report-studio integrated-report-editor">
     <header className="report-toolbar">
       <div className="report-title"><span className="report-title-icon"><img src={icon} alt=""/></span><div><small>Structured academic workspace</small><h1>Lab Report <span>Builder</span></h1></div></div>
-      <div className="report-actions"><Button className="report-back" variant="outline" size="sm" onClick={onBackToCover}>Back to Cover Page</Button><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
+      <div className="report-actions"><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download Complete Report"}</Button></div>
     </header>
     <section className="report-workspace">
       <aside className="report-editor">
@@ -177,9 +179,6 @@ export default function Home({ onBackToCover }: { onBackToCover: () => void }) {
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">+ Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
         </div>
       </aside>
-      <section className="report-preview-column"><div className="report-preview-toolbar"><strong>Lab Report Preview</strong><span>Times New Roman · 12 pt</span></div><div className="preview-wrap"><article className="paper report-paper">
-        <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
-      </article><p className="attribution">The complete download places your cover before these report pages.</p></div></section>
     </section>
   </main>;
 }

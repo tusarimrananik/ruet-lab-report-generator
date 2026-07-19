@@ -75,6 +75,14 @@
 .report-download:hover { filter: brightness(1.06); }
 .report-back { border-radius: .72rem !important; background: var(--card) !important; color: var(--foreground) !important; }
 .report-back:hover { border-color: color-mix(in oklab,var(--primary) 35%,var(--border)) !important; color: var(--primary) !important; }
+.integrated-report-editor { min-height: 0; background: transparent; }
+.integrated-report-editor .report-toolbar { position: static; min-height: 4.35rem; border-top: 0; padding: .7rem 1rem; box-shadow: none; }
+.integrated-report-editor .report-workspace { display: block; min-height: 0; }
+.integrated-report-editor .report-editor { overflow: visible; border-right: 0; }
+.integrated-report-editor .report-panel { padding-bottom: 2rem; }
+.integrated-report-preview { width: 100%; }
+.integrated-report-preview .paper { width: min(794px,100%); min-height: 1123px; }
+.integrated-report-preview .report-body { min-height: 1123px; }
 .report-workspace { grid-template-columns: minmax(27rem,.92fr) minmax(0,1.08fr); min-height: calc(100vh - 8.5rem); }
 .report-editor { border-color: var(--border); background: color-mix(in oklab,var(--background) 98%,#e6f5ee); }
 .report-editor-heading { padding: 1.35rem 1.4rem 1.1rem; background: linear-gradient(180deg,color-mix(in oklab,var(--secondary) 36%,var(--background)),var(--background)); }
