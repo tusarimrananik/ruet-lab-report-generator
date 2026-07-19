@@ -52,6 +52,9 @@
 .paper { width: 794px; min-height: 1123px; margin: auto; background: #fff; box-shadow: 0 12px 36px rgb(0 0 0 / .2); color: #101410; font-family: "Times New Roman", serif; }
 .report-body { padding: 96px; font: 12pt/1.5 "Times New Roman", serif; }
 .report-body > h1 { margin: 0 0 29px; font-size: 15pt; }
+.report-body.title-bold > h1 { font-weight: 700; }
+.report-body.title-underlined > h1 { font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.report-body.title-plain > h1 { font-weight: 400; }
 .report-section { margin: 0 0 19px; }
 .report-section h2 { margin: 0 0 7px; font-size: 14pt; }
 .report-section p { margin: 0; text-align: justify; white-space: pre-wrap; }

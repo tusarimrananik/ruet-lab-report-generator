@@ -55,7 +55,7 @@ const CoverApp = () => {
             {!isMobile || previewModeDebounced ? (
               <div className="document-preview-stack">
                 <section className="document-preview-item cover-preview-item">
-                  <PDFViewer className="cover-document-preview">{<CoverTemplate />}</PDFViewer>
+                  <PDFViewer className="cover-document-preview">{<CoverTemplate report={report} />}</PDFViewer>
                 </section>
                 <section className="document-preview-item report-document-preview">
                   <LabReportGenerator view="preview" report={report} setReport={setReport} />

@@ -16,6 +16,13 @@ export type UniversityOption = {
   shortName: string;
   name: string;
   verified: boolean;
+  enabled: boolean;
+  coverPreset: {
+    institutionName: string;
+    shortName: string;
+    motto?: string;
+    logo: "ruet" | "custom";
+  };
   departments: DepartmentOption[];
 };
 
@@ -128,6 +135,8 @@ export const universities: UniversityOption[] = [
     shortName: "RUET",
     name: "Rajshahi University of Engineering & Technology",
     verified: true,
+    enabled: true,
+    coverPreset: { institutionName: "Rajshahi University of Engineering & Technology", shortName: "RUET", motto: "Heaven’s Light is Our Guide", logo: "ruet" },
     departments: ruetDepartments,
   },
   {
@@ -135,6 +144,8 @@ export const universities: UniversityOption[] = [
     shortName: "BUET",
     name: "Bangladesh University of Engineering and Technology",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "Bangladesh University of Engineering and Technology", shortName: "BUET", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -142,6 +153,8 @@ export const universities: UniversityOption[] = [
     shortName: "RU",
     name: "University of Rajshahi",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "University of Rajshahi", shortName: "RU", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -149,6 +162,8 @@ export const universities: UniversityOption[] = [
     shortName: "CUET",
     name: "Chittagong University of Engineering & Technology",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "Chittagong University of Engineering & Technology", shortName: "CUET", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -156,6 +171,8 @@ export const universities: UniversityOption[] = [
     shortName: "KUET",
     name: "Khulna University of Engineering & Technology",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "Khulna University of Engineering & Technology", shortName: "KUET", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -163,6 +180,8 @@ export const universities: UniversityOption[] = [
     shortName: "SUST",
     name: "Shahjalal University of Science and Technology",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "Shahjalal University of Science and Technology", shortName: "SUST", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -170,6 +189,8 @@ export const universities: UniversityOption[] = [
     shortName: "DU",
     name: "University of Dhaka",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "University of Dhaka", shortName: "DU", logo: "custom" },
     departments: demoDepartments,
   },
   {
@@ -177,9 +198,13 @@ export const universities: UniversityOption[] = [
     shortName: "Other",
     name: "Other University",
     verified: false,
+    enabled: false,
+    coverPreset: { institutionName: "Other University", shortName: "University", logo: "custom" },
     departments: demoDepartments,
   },
 ];
+
+export const enabledUniversities = universities.filter((university) => university.enabled);
 
 export const getUniversity = (id: string) => universities.find(university => university.id === id) ?? universities[0];
 

@@ -41,8 +41,9 @@ export default async function handler(request, response) {
   const ip = getClientIp(request);
   if (isRateLimited(ip)) return response.status(429).json({ error: 'AI generation limit reached. Try again later.' });
 
-  const { courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', sessionalCourse = '', university = '', universityStatus = '', presetDepartment = '', semester = '', notes = '', sections = [] } = request.body || {};
-  if (!String(labTitle).trim()) return response.status(400).json({ error: 'Add the lab title on the cover page first.' });
+  const { documentType = '', courseCode = '', courseTitle = '', labNo = '', labTitle = '', preset = '', sessionalCourse = '', university = '', universityStatus = '', presetDepartment = '', semester = '', notes = '', sections = [] } = request.body || {};
+  const resolvedDocumentType = documentType || preset || 'Lab Report';
+  if (!String(labTitle).trim()) return response.status(400).json({ error: `Add the ${String(resolvedDocumentType).toLowerCase()} title first.` });
 
   const safeSections = Array.isArray(sections) ? sections.slice(0, 12).filter(section => /^[a-z][a-z0-9_-]{0,39}$/.test(String(section.id || ''))) : [];
   if (!safeSections.length) return response.status(400).json({ error: 'Add at least one valid report section.' });
@@ -55,6 +56,7 @@ export default async function handler(request, response) {
   };
 
   const context = {
+    documentType: String(resolvedDocumentType).slice(0, 40),
     courseCode: String(courseCode).slice(0, 40),
     courseTitle: String(courseTitle).slice(0, 200),
     labNo: String(labNo).slice(0, 20),
@@ -73,7 +75,7 @@ export default async function handler(request, response) {
     })),
   };
 
-  const instructions = `Write a concise, technically accurate lab report for the supplied sessional course using the academic context and exact section keys provided. Treat university, department, semester, sessional course, and internal report format only as writing context; never claim an official university policy, template, course code, or curriculum rule that is not supplied. A universityStatus of "demo structure" means the selection is explicitly non-authoritative. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly. Use formal academic prose in complete paragraphs. Preserve useful facts and code from existing sections. Never invent execution, measured values, screenshots, inputs, or observed register results. If no observed output is supplied, return an empty output string and phrase any result or verdict as an expected result that the student must verify. Return code without Markdown fences. Do not include headings inside field values.`;
+  const instructions = `Write a concise, technically accurate academic document of the documentType supplied by the user, using the academic context and exact section keys provided. Adapt depth and tone appropriately for a lab report, assignment, research paper, or thesis. Treat university, department, semester, course, and internal format only as writing context; never claim an official policy, template, course code, curriculum rule, citation, measurement, result, or source that was not supplied. For CSE 2206 assembly work, target emu8086-compatible 8086 assembly. Use formal academic prose. Preserve useful facts and code from existing sections. If evidence or observed output is missing, leave the relevant field empty or clearly identify what the student must supply. Return code without Markdown fences. Do not include headings inside field values.`;
 
   try {
     const upstream = await fetch(GROQ_CHAT_URL, {
@@ -93,7 +95,7 @@ export default async function handler(request, response) {
         response_format: {
           type: 'json_schema',
           json_schema: {
-            name: 'ruet_lab_report',
+            name: 'academic_document',
             strict: true,
             schema,
           },

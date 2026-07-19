@@ -92,7 +92,7 @@ const studentDepartment = atomWithStorage<Department | ''>(
   { getOnInit: true },
 );
 
-export const types = ['Lab Report', 'Assignment', 'Report', 'Thesis'] as const;
+export const types = ['Lab Report', 'Assignment', 'Research Paper', 'Thesis'] as const;
 
 export const designations = [
   'Lecturer',

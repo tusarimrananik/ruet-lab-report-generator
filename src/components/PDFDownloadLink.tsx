@@ -44,7 +44,7 @@ export const PDFDownloadLink = ({
     teacherName,
     teacherTitle,
   };
-  const fileNameClean = `${courseCode || 'RUET'}-Lab-${labNo || 'Report'}.pdf`
+  const fileNameClean = `${courseCode || 'RUET'}-${report.documentType.replace(/\s+/g, '-')}-${labNo || 'Document'}.pdf`
     .replace(' ', '_')
     .replace(/[^a-zA-Z0-9.\-_]/g, '');
 
@@ -54,7 +54,7 @@ export const PDFDownloadLink = ({
     startTransition(async () => {
       try {
         const [coverBlob, reportBlob] = await Promise.all([
-          pdf(<CoverTemplate key={Math.random()} />).toBlob(),
+          pdf(<CoverTemplate key={Math.random()} report={completeReport} />).toBlob(),
           pdf(<ReportDocument report={completeReport} />).toBlob(),
         ]);
         const merged = await PDFDocument.create();
@@ -63,7 +63,8 @@ export const PDFDownloadLink = ({
           const pages = await merged.copyPages(source, source.getPageIndices());
           pages.forEach((page) => merged.addPage(page));
         }
-        const blob = new Blob([await merged.save()], { type: 'application/pdf' });
+        const bytes = await merged.save();
+        const blob = new Blob([bytes.slice().buffer as ArrayBuffer], { type: 'application/pdf' });
         if (window.navigator.userAgent === 'ruet-cover-page-gen') {
           const fileReader = new FileReader();
           fileReader.onloadend = () => {

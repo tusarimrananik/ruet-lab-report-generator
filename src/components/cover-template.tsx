@@ -15,6 +15,8 @@ import motto from '@/assets/motto.png';
 import RUETLogo from '@/assets/RUET-Logo.png';
 import { getBestFitFontSize } from '@/lib/best-fit-font-size';
 import editorStore, { type Department, deptShortForm } from '@/store/editor';
+import { getUniversity } from '@/data/report-presets';
+import type { LabReport } from './report-pdf';
 
 Font.register({
   family: 'TeX Gyre Termes',
@@ -67,6 +69,9 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
   },
+  documentTitleBold: { fontWeight: 700 },
+  documentTitleUnderlined: { fontWeight: 700, textDecoration: 'underline' },
+  documentTitlePlain: { fontWeight: 400 },
   textBF: {
     fontSize: 16,
     textAlign: 'left',
@@ -113,20 +118,20 @@ const styles = StyleSheet.create({
   },
 });
 
-const dataListItem = (key: string, value: string, keySize?: number) => (
+const dataListItem = (key: string, value: string, keySize?: number, valueStyle = styles.documentTitlePlain) => (
   <View style={{ flexDirection: 'row' }}>
     <Text style={{ ...styles.thV, flexBasis: keySize ?? styles.thV.flexBasis }}>
       {key}
     </Text>
     <Text style={styles.colon}>:</Text>
-    <Text style={styles.td}>{value}</Text>
+    <Text style={[styles.td, valueStyle]}>{value}</Text>
   </View>
 );
 
 // Create Document Component
-export function CoverTemplate() {
+export function CoverTemplate({ report }: { report?: LabReport }) {
   const department = useAtomValue(editorStore.studentDepartment);
-  const type = useAtomValue(editorStore.type);
+  const storedType = useAtomValue(editorStore.type);
   const courseNo = useAtomValue(editorStore.courseNo);
   const courseTitle = useAtomValue(editorStore.courseTitle);
   const coverNo = useAtomValue(editorStore.coverNo);
@@ -176,6 +181,14 @@ export function CoverTemplate() {
       })
     : undefined;
 
+  const university = getUniversity(report?.university ?? 'ruet');
+  const type = report?.documentType ?? storedType;
+  const titleStyle = report?.titleStyle ?? 'bold';
+  const titleTextStyle = titleStyle === 'underlined'
+    ? styles.documentTitleUnderlined
+    : titleStyle === 'plain'
+      ? styles.documentTitlePlain
+      : styles.documentTitleBold;
   const isThesis = type === 'Thesis';
 
   const studentInfo = (
@@ -236,7 +249,7 @@ export function CoverTemplate() {
           <Text style={styles.text}>{teacherName}</Text>
           <Text style={styles.text}>{teacherDesignation}</Text>
           {!!teacherDepartment && (
-            <Text style={styles.text}>{`Dept. of ${teacherDept}, RUET`}</Text>
+            <Text style={styles.text}>{`Dept. of ${teacherDept}, ${university.coverPreset.shortName}`}</Text>
           )}
         </>
       )}
@@ -245,7 +258,7 @@ export function CoverTemplate() {
           <Text style={styles.text}>{secondTeacherName}</Text>
           <Text style={styles.text}>{secondTeacherDesignation}</Text>
           {!!teacherDepartment && (
-            <Text style={styles.text}>{`Dept. of ${teacherDept}, RUET`}</Text>
+            <Text style={styles.text}>{`Dept. of ${teacherDept}, ${university.coverPreset.shortName}`}</Text>
           )}
         </View>
       )}
@@ -307,13 +320,13 @@ export function CoverTemplate() {
   return (
     <Document title="Cover Page">
       <Page size="A4" style={styles.page}>
-        {watermark && <Image src={RUETLogo} style={styles.watermark} />}
-        <Text style={styles.motto}>Heaven’s Light is Our Guide</Text>
-        <Image src={motto} style={styles.mottoImage} />
+        {watermark && university.coverPreset.logo === 'ruet' && <Image src={RUETLogo} style={styles.watermark} />}
+        <Text style={styles.motto}>{university.coverPreset.motto ?? ''}</Text>
+        {university.coverPreset.logo === 'ruet' && <Image src={motto} style={styles.mottoImage} />}
         <Text style={styles.institution}>
-          Rajshahi University of Engineering & Technology
+          {university.coverPreset.institutionName}
         </Text>
-        <Image src={RUETLogo} style={styles.image} />
+        {university.coverPreset.logo === 'ruet' && <Image src={RUETLogo} style={styles.image} />}
         <View>
           <Text style={styles.text}>{`Department of ${department}`}</Text>
           {studentSeries && studentID.length >= 2 && (
@@ -343,7 +356,7 @@ export function CoverTemplate() {
           {isThesis ? (
             <View style={{ textAlign: 'center' }}>
               <Text style={styles.text}>A project & thesis report on</Text>
-              <Text style={styles.text}>{coverTitle}</Text>
+              <Text style={[styles.text, titleTextStyle]}>{coverTitle}</Text>
             </View>
           ) : (
             <>
@@ -358,6 +371,8 @@ export function CoverTemplate() {
                 dataListItem(
                   `${type !== 'Lab Report' ? type : 'Experiment'} Title`,
                   coverTitle,
+                  undefined,
+                  titleTextStyle,
                 )}
             </>
           )}

@@ -13,7 +13,7 @@ export function TopbarLeft() {
     <div className="cover-pane-toolbar">
       <div className="cover-pane-title">
         <span className="cover-pane-icon"><img src={icon} alt="" /></span>
-        <h1>Cover Page</h1>
+        <h1>Academic Document Builder</h1>
       </div>
       <div className="flex items-center gap-2">
         <ModeToggle />

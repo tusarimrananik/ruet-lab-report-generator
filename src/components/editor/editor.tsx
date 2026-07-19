@@ -9,11 +9,28 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import {
+  documentTypes,
+  getDocumentSections,
+  hasRemovedContent,
+  mergeDocumentSections,
+  titleStyles,
+  type DocumentType,
+  type TitleStyle,
+} from '@/data/document-presets';
+import {
+  academicTerms,
+  enabledUniversities,
+  getDepartment,
+  getSessionalCourses,
+  getUniversity,
+  type SessionalCourse,
+} from '@/data/report-presets';
 import editorStore, {
+  Department,
   departments,
   designations,
   studentDepartments,
-  types,
 } from '@/store/editor';
 import { teacherEffect } from '@/store/effects/editor';
 import { previewModeAtom } from '@/store/preview-mode';
@@ -23,7 +40,6 @@ import { DateInput } from './DateInput';
 import { FormDescription } from './form-description';
 import { FormItem } from './form-item';
 import { ImportExport } from './import-export';
-import { SelectInput } from './select-input';
 import { SwitchInput } from './switch-input';
 import { TeacherName } from './teacher-name';
 import { TextInput } from './text-input';
@@ -46,7 +62,9 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
   useAtom(teacherEffect);
 
   return (
-    <Tabs
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <AcademicPresetBar report={report} setReport={setReport} />
+      <Tabs
       defaultValue="student"
       className="flex flex-1 flex-col overflow-hidden"
       atom={editorStore.editorTab}
@@ -58,7 +76,7 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
             ['subject', ReaderIcon, 'Subject'],
             ['teacher', IdCardIcon, 'Teacher'],
             ['settings', MixerVerticalIcon, 'Settings'],
-            ['report', ReaderIcon, 'Lab Report'],
+            ['report', ReaderIcon, 'Content'],
           ] as const
         ).map(([x, Icon, label]) => (
           <TabsTrigger value={x} className="cover-tab flex-1" key={x} aria-label={x}>
@@ -250,7 +268,81 @@ export function Editor({ report, setReport }: { report: LabReport; setReport: Di
       <TabsContent value="report" className="lab-report-tab-content flex-1 overflow-y-auto">
         <LabReportGenerator view="editor" report={report} setReport={setReport} />
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
+  );
+}
+
+function AcademicPresetBar({ report, setReport }: { report: LabReport; setReport: Dispatch<SetStateAction<LabReport>> }) {
+  const setCoverType = useSetAtom(editorStore.type);
+  const setStudentDepartment = useSetAtom(editorStore.studentDepartment);
+  const setCourseNo = useSetAtom(editorStore.courseNo);
+  const setCourseTitle = useSetAtom(editorStore.courseTitle);
+  const university = getUniversity(report.university);
+  const courses = getSessionalCourses(report.university, report.presetDepartment, report.semester);
+
+  const commitPreset = (
+    next: LabReport,
+    course?: SessionalCourse,
+    nextDocumentType: DocumentType = next.documentType,
+  ) => {
+    const format = course?.format ?? 'general';
+    const template = getDocumentSections(nextDocumentType, format);
+    if (hasRemovedContent(report.sections, template) && !window.confirm('Changing this preset will remove content from sections that are not used in the new format. Continue?')) return false;
+    setReport({
+      ...next,
+      documentType: nextDocumentType,
+      preset: nextDocumentType === 'Lab Report' ? format : nextDocumentType.toLowerCase().replace(' ', '-'),
+      sessionalCourse: course?.code ?? next.sessionalCourse,
+      sections: mergeDocumentSections(report.sections, template),
+    });
+    setCoverType(nextDocumentType);
+    if (course) {
+      setCourseNo(course.code);
+      setCourseTitle(course.title);
+    }
+    return true;
+  };
+
+  const changeUniversity = (id: string) => {
+    const nextUniversity = getUniversity(id);
+    const department = nextUniversity.departments[0];
+    const course = getSessionalCourses(id, department.code, report.semester)[0];
+    const next = { ...report, university: id, presetDepartment: department.code, sessionalCourse: course?.code ?? '' };
+    if (commitPreset(next, course)) setStudentDepartment(department.name as Department);
+  };
+
+  const changeDocumentType = (documentType: DocumentType) => {
+    const course = courses.find((item) => item.code === report.sessionalCourse) ?? courses[0];
+    commitPreset({ ...report, documentType }, course, documentType);
+  };
+
+  const changeDepartment = (code: string) => {
+    const department = getDepartment(report.university, code);
+    const course = getSessionalCourses(report.university, code, report.semester)[0];
+    const next = { ...report, presetDepartment: code, sessionalCourse: course?.code ?? '' };
+    if (commitPreset(next, course)) setStudentDepartment(department.name as Department);
+  };
+
+  const changeSemester = (semester: string) => {
+    const course = getSessionalCourses(report.university, report.presetDepartment, semester)[0];
+    commitPreset({ ...report, semester, sessionalCourse: course?.code ?? '' }, course);
+  };
+
+  const changeCourse = (code: string) => {
+    const course = courses.find((item) => item.code === code);
+    if (course) commitPreset({ ...report, sessionalCourse: code }, course);
+  };
+
+  return (
+    <div className="academic-preset-bar">
+      <label><span>University</span><select value={report.university} onChange={(event) => changeUniversity(event.target.value)}>{enabledUniversities.map((item) => <option value={item.id} key={item.id}>{item.shortName}</option>)}</select></label>
+      <label><span>Document</span><select value={report.documentType} onChange={(event) => changeDocumentType(event.target.value as DocumentType)}>{documentTypes.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+      <label><span>Department</span><select value={report.presetDepartment} onChange={(event) => changeDepartment(event.target.value)}>{university.departments.map((item) => <option value={item.code} key={item.code}>{item.code}</option>)}</select></label>
+      <label><span>Semester</span><select value={report.semester} onChange={(event) => changeSemester(event.target.value)}>{academicTerms.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+      <label className="academic-course-select"><span>Course</span><select value={courses.some((item) => item.code === report.sessionalCourse) ? report.sessionalCourse : ''} disabled={!courses.length} onChange={(event) => changeCourse(event.target.value)}>{courses.length ? courses.map((item) => <option value={item.code} key={item.code}>{item.code} — {item.title}</option>) : <option value="">Enter manually</option>}</select></label>
+      <label><span>Style</span><select value={report.titleStyle} onChange={(event) => setReport((current) => ({ ...current, titleStyle: event.target.value as TitleStyle }))}>{titleStyles.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
+    </div>
   );
 }
 
@@ -271,14 +363,7 @@ function TypeAndCoverNo() {
   const [coverNo, setCoverNo] = useAtom(editorStore.coverNo);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <FormItem label="Type">
-        <SelectInput<(typeof types)[number]>
-          name="type"
-          atom={editorStore.type}
-          options={types.map((x) => ({ label: x, value: x }))}
-        />
-      </FormItem>
+    <div>
       {type !== 'Thesis' && (
         <FormItem
           label={`${type} No.`}

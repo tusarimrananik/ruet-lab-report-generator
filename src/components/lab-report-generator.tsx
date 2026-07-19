@@ -4,79 +4,23 @@ import { ChangeEvent, Dispatch, SetStateAction, useMemo, useState } from "react"
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
 import editorStore from '@/store/editor';
-import { academicTerms, getDepartment, getSessionalCourses, getUniversity, SessionalCourse, universities } from '@/data/report-presets';
-import { LabReport, ReportSection } from './report-pdf';
+import { getDocumentSections } from '@/data/document-presets';
+import { getDepartment, getSessionalCourses, getUniversity } from '@/data/report-presets';
+import { LabReport } from './report-pdf';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 
-type Section = ReportSection;
 type Report = LabReport;
 
-const makeSection = (id: string, title: string, placeholder: string, kind?: Section["kind"]): Section => ({
-  id,
-  title,
-  body: "",
-  placeholder,
-  kind,
-});
-
-const presets: Record<string, { label: string; sections: Section[] }> = {
-  assembly: { label: "CSE 2206 / Assembly", sections: [
-    makeSection("objective", "Objective", "State the purpose of the experiment clearly."),
-    makeSection("theory", "Theory", "Explain the 8086 instructions, registers, interrupts, ASCII values, or concepts used in the experiment."),
-    makeSection("code", "Assembly Language Code", "; Paste the complete, executable assembly program here", "code"),
-    makeSection("output", "Output", "Upload the emulator or console screenshot using Add image. Add a short note only when needed."),
-    makeSection("verdict", "Verdict", "State whether the program assembled and executed successfully and whether the expected result was obtained."),
-    makeSection("discussion", "Discussion", "Explain the register values, program flow, instructions, and observed output."),
-    makeSection("conclusion", "Conclusion", "Summarize the 8086 concepts and practical skills demonstrated by the experiment."),
-  ] },
-  programming: { label: "Programming / Logic", sections: [
-    ["objective","Objective","Describe what the problem or exercise verifies."],
-    ["theory","Theory","Explain the relevant ideas, definitions, formulae, or logical rules."],
-    ["algorithm","Algorithm","1. List inputs and assumptions.\n2. Describe the steps.\n3. Compute or evaluate the result.\n4. Display the output."],
-    ["code","Code","# Paste clean, runnable code here","code"],
-    ["output","Sample Output","Paste the output or add an observation."],
-    ["discussion","Discussion","Interpret the output and explain any noteworthy cases."],
-    ["conclusion","Conclusion","Summarize what was verified and learned."],
-  ].map(([id,title,placeholder,kind])=>makeSection(id,title,placeholder,kind as Section["kind"])) },
-  electrical: { label: "Electrical / Instrumentation", sections: [
-    ["objectives","Objectives","1. State the primary objective.\n2. Add any comparison or verification objective."],
-    ["theory","Theory","Explain the operating principle, relationships, and relevant formulae."],
-    ["apparatus","Required Apparatus","1. List equipment\n2. Include ratings or quantities where useful"],
-    ["diagram","Circuit Diagram","Insert the circuit diagram using the image button, then add a figure caption."],
-    ["procedure","Procedure","1. Describe connections and safety checks.\n2. Explain how readings were taken.\n3. State how results were calculated."],
-    ["data","Data Table and Calculations","Add measured values, units, equations, sample calculations, and percentage error."],
-    ["result","Result and Discussion","Compare experimental and theoretical values. Discuss errors, losses, and instrument limitations."],
-    ["conclusion","Conclusion","State whether the experiment verified the expected behaviour."],
-  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
-  experimental: { label: "Experimental Science", sections: [
-    ["objective","Objective","State the purpose of the experiment clearly."],
-    ["theory","Theory","Explain the scientific principle, relationships, and relevant formulae."],
-    ["apparatus","Required Apparatus","List the equipment, materials, and quantities used."],
-    ["procedure","Procedure","Describe the experimental steps in the order performed, including necessary safety precautions."],
-    ["data","Observations and Calculations","Record observations with units, equations, sample calculations, and uncertainty where relevant."],
-    ["result","Result","State the result obtained without inventing measurements that were not observed."],
-    ["discussion","Discussion","Interpret the result and discuss errors, limitations, and comparison with expected behaviour."],
-    ["conclusion","Conclusion","Summarize what the experiment demonstrated."],
-  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
-  general: { label: "General Sessional", sections: [
-    ["objective","Objective","State the purpose and expected learning outcome."],
-    ["introduction","Introduction or Theory","Explain the relevant concepts and background."],
-    ["method","Method or Activity","Describe the work completed in a clear sequence."],
-    ["output","Output or Deliverable","Add the produced work, result, presentation summary, or observation."],
-    ["discussion","Discussion","Explain the outcome, important decisions, limitations, and lessons learned."],
-    ["conclusion","Conclusion","Summarize the completed work and learning outcome."],
-  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
-};
-
 export const initialLabReport: Report = {
+  documentType:"Lab Report", titleStyle:"bold",
   preset:"assembly", university:"ruet", presetDepartment:"CSE", semester:"2-2", sessionalCourse:"CSE 2206",
   department:"Computer Science & Engineering", courseCode:"CSE 2206",
   courseTitle:"Microprocessors, Microcontrollers and Assembly Language Sessional", labNo:"01",
-  labTitle:"Allocation of Memory Values with 8-bit Registers", experimentDate:"", submissionDate:"",
-  studentName:"Md. Tusar Imran", roll:"2303096", section:"B", series:"23",
-  teacherName:"Md. Sozib Hossain", teacherTitle:"Assistant Professor",
-  sections: presets.assembly.sections,
+  labTitle:"", experimentDate:"", submissionDate:"",
+  studentName:"", roll:"", section:"", series:"",
+  teacherName:"", teacherTitle:"",
+  sections: getDocumentSections('Lab Report', 'assembly'),
 };
 
 export default function Home({ view, report, setReport }: { view: "editor" | "preview"; report: Report; setReport: Dispatch<SetStateAction<Report>> }) {
@@ -98,32 +42,14 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
   const selectedUniversity=useMemo(()=>getUniversity(report.university),[report.university]);
   const selectedDepartment=useMemo(()=>getDepartment(report.university,report.presetDepartment),[report.university,report.presetDepartment]);
   const sessionalCourses=useMemo(()=>getSessionalCourses(report.university,report.presetDepartment,report.semester),[report.university,report.presetDepartment,report.semester]);
-  const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0],[sessionalCourses,report.sessionalCourse]);
-  const reportForExport=useMemo<Report>(()=>({...report,department,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
+  const selectedCourse=useMemo(()=>sessionalCourses.find(course=>course.code===report.sessionalCourse)??sessionalCourses[0]??{code:courseCode,title:courseTitle,format:"general" as const},[sessionalCourses,report.sessionalCourse,courseCode,courseTitle]);
+  const reportForExport=useMemo<Report>(()=>({...report,department:department||selectedDepartment.name,courseCode,courseTitle,labNo,labTitle,experimentDate:experimentDate?dayjs(experimentDate).format('YYYY-MM-DD'):'',submissionDate:submissionDate?dayjs(submissionDate).format('YYYY-MM-DD'):'',studentName,roll,section,series:roll.slice(0,2),teacherName,teacherTitle}),[report,department,selectedDepartment.name,courseCode,courseTitle,labNo,labTitle,experimentDate,submissionDate,studentName,roll,section,teacherName,teacherTitle]);
   const complete=useMemo(()=>Math.round((report.sections.filter(s=>s.body.trim()).length/report.sections.length)*100),[report.sections]);
-  const applyCourse=(r:Report,selected?:SessionalCourse):Report=>{
-    if(!selected)return {...r,sessionalCourse:""};
-    return {...r,sessionalCourse:selected.code,preset:selected.format,sections:presets[selected.format].sections.map(s=>({...s}))};
-  };
-  const changeCourse=(code:string)=>setReport(r=>applyCourse(r,getSessionalCourses(r.university,r.presetDepartment,r.semester).find(course=>course.code===code)));
-  const changeUniversity=(id:string)=>setReport(r=>{
-    const university=getUniversity(id);
-    const next={...r,university:university.id,presetDepartment:university.departments[0].code};
-    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
-  });
-  const changeDepartment=(code:string)=>setReport(r=>{
-    const next={...r,presetDepartment:code};
-    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
-  });
-  const changeSemester=(semester:string)=>setReport(r=>{
-    const next={...r,semester};
-    return applyCourse(next,getSessionalCourses(next.university,next.presetDepartment,next.semester)[0]);
-  });
   const updateSection=(id:string,body:string)=>setReport(r=>({...r,sections:r.sections.map(s=>s.id===id?{...s,body}:s)}));
   const addImage=(id:string,e:ChangeEvent<HTMLInputElement>)=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>updateSection(id,`${report.sections.find(s=>s.id===id)?.body||""}\n\n[IMAGE:${reader.result}]`);reader.readAsDataURL(f)};
   const fillWithAI=async()=>{
     if(!selectedCourse){setAiMessage("No verified sessional course data is available for this RUET department yet.");return;}
-    if(!reportForExport.labTitle.trim()){setAiMessage("Add the Lab Title on the Cover Page first, then try again.");return;}
+    if(!reportForExport.labTitle.trim()){setAiMessage(`Add the ${report.documentType} title on the Subject tab first.`);return;}
     setGenerating(true);setAiMessage("");
     try{
       const response=await fetch("/api/generate-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({courseCode:reportForExport.courseCode,courseTitle:reportForExport.courseTitle,labNo:reportForExport.labNo,labTitle:reportForExport.labTitle,preset:report.preset,sessionalCourse:`${selectedCourse.code} — ${selectedCourse.title}`,university:selectedUniversity.name,universityStatus:selectedUniversity.verified?"verified RUET curriculum":"demo structure",presetDepartment:`${selectedDepartment.code} — ${selectedDepartment.name}`,semester:report.semester,notes:aiNotes,sections:report.sections.map(({id,title,body,kind})=>({id,title,kind,body:body.replace(/\[IMAGE:data:image\/[^\]]+\]/g,"[uploaded output image]")}))})});
@@ -141,26 +67,18 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };
+  const documentTitle=report.documentType==="Lab Report"?`Lab No. ${reportForExport.labNo}: ${reportForExport.labTitle}`:reportForExport.labTitle||report.documentType;
   if(view === "preview") return <div className="integrated-report-preview"><article className="paper report-paper">
-    <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
+    <section className={`report-body title-${report.titleStyle}`}><h1>{documentTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Document figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
   </article></div>;
   return <main className="report-studio integrated-report-editor">
     <section className="report-workspace">
       <aside className="report-editor">
         <div className="report-panel">
           <div className="report-utility-row"><span className="progress"><b>{complete}%</b> complete</span></div>
-          <div className="preset-card">
-            <div className="preset-card-heading"><strong>Course</strong><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
-            <div className="preset-grid">
-              <label className="preset-field"><span>University</span><select className="report-select" value={report.university} onChange={e=>changeUniversity(e.target.value)}>{universities.map(university=><option key={university.id} value={university.id}>{university.shortName}{university.verified?" — Verified":" — Demo"}</option>)}</select></label>
-              <label className="preset-field"><span>Department</span><select className="report-select" value={report.presetDepartment} onChange={e=>changeDepartment(e.target.value)}>{selectedUniversity.departments.map(department=><option key={department.code} value={department.code}>{department.code} — {department.name}</option>)}</select></label>
-              <label className="preset-field"><span>Semester</span><select className="report-select" value={report.semester} onChange={e=>changeSemester(e.target.value)}>{academicTerms.map(term=><option key={term} value={term}>{term}</option>)}</select></label>
-              <label className="preset-field course-field"><span>Sessional course</span><select className="report-select" value={selectedCourse?.code??""} disabled={!sessionalCourses.length} onChange={e=>changeCourse(e.target.value)}>{sessionalCourses.length?sessionalCourses.map(course=><option key={course.code} value={course.code}>{course.code} — {course.title}{selectedUniversity.verified?"":" — Demo"}</option>):<option value="">Verified course data not available yet</option>}</select></label>
-            </div>
-          </div>
           <div className="ai-fill-card">
             <div className="ai-fill-heading"><strong>AI assistant</strong><span className="ai-badge">AI</span></div>
-            <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder="Optional: paste the lab task, input values, expected output, observed register values, or any teacher instructions."/>
+            <Textarea rows={4} value={aiNotes} onChange={e=>setAiNotes(e.target.value)} placeholder={`Optional: paste the ${report.documentType.toLowerCase()} instructions, source material, data, or teacher requirements.`}/>
             <div className="ai-fill-actions">{aiMessage&&<span>{aiMessage}</span>}<Button type="button" size="sm" disabled={generating||!selectedCourse} onClick={fillWithAI}>{generating?"Generating…":"Fill empty sections"}</Button></div>
           </div>
           {report.sections.map((s,i)=><div className="section-edit" key={s.id}><div className="section-label"><div><span>{String(i+1).padStart(2,"0")}</span><strong>{s.title}</strong></div><label className="image-add">+ Add image<input hidden type="file" accept="image/*" onChange={e=>addImage(s.id,e)}/></label></div><Textarea className={s.kind==="code"?"code-input":""} rows={s.kind==="code"?12:5} placeholder={s.placeholder} value={s.body} onChange={e=>updateSection(s.id,e.target.value)}/></div>)}
