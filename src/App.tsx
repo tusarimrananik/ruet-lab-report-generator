@@ -51,7 +51,7 @@ const CoverApp = () => {
               previewMode || 'max-lg:invisible max-lg:grow-0 max-lg:scale-x-0',
             )}
           >
-            <TopbarRight />
+            <TopbarRight report={report} />
             {!isMobile || previewModeDebounced ? (
               <div className="document-preview-stack">
                 <section className="document-preview-item cover-preview-item">

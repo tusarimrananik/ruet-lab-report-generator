@@ -1,15 +1,11 @@
 "use client";
 
 import { ChangeEvent, Dispatch, SetStateAction, useMemo, useState } from "react";
-import { pdf } from '@react-pdf/renderer';
-import { fileSave } from 'browser-fs-access';
 import dayjs from 'dayjs';
 import { useAtomValue } from 'jotai';
-import { PDFDocument } from 'pdf-lib';
 import editorStore from '@/store/editor';
 import { academicTerms, getDepartment, getSessionalCourses, getUniversity, SessionalCourse, universities } from '@/data/report-presets';
-import { CoverTemplate } from './cover-template';
-import { LabReport, ReportDocument, ReportSection } from './report-pdf';
+import { LabReport, ReportSection } from './report-pdf';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 
@@ -84,7 +80,6 @@ export const initialLabReport: Report = {
 };
 
 export default function Home({ view, report, setReport }: { view: "editor" | "preview"; report: Report; setReport: Dispatch<SetStateAction<Report>> }) {
-  const [downloading,setDownloading] = useState(false);
   const [generating,setGenerating] = useState(false);
   const [aiNotes,setAiNotes] = useState("");
   const [aiMessage,setAiMessage] = useState("");
@@ -146,7 +141,6 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     }catch(error){setAiMessage(error instanceof Error?error.message:"Could not generate the report.");}
     finally{setGenerating(false)}
   };
-  const downloadCompleteReport=async()=>{setDownloading(true);try{const [coverBlob,reportBlob]=await Promise.all([pdf(<CoverTemplate/>).toBlob(),pdf(<ReportDocument report={reportForExport}/>).toBlob()]);const merged=await PDFDocument.create();for(const blob of [coverBlob,reportBlob]){const source=await PDFDocument.load(await blob.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}const bytes=await merged.save();await fileSave(new Blob([bytes],{type:"application/pdf"}),{fileName:`${reportForExport.courseCode || "RUET"}-Lab-${reportForExport.labNo || "Report"}.pdf`,extensions:[".pdf"]});}catch(error){console.error(error);alert("Could not create the complete report PDF.");}finally{setDownloading(false)}};
   if(view === "preview") return <div className="integrated-report-preview"><article className="paper report-paper">
     <section className="report-body"><h1>Lab No. {reportForExport.labNo}: {reportForExport.labTitle}</h1>{report.sections.map(s=><section className="report-section" key={s.id}><h2>{s.title}</h2>{s.body.split(/(\[IMAGE:data:image\/[^\]]+\])/).map((part,i)=>part.startsWith("[IMAGE:")?/* eslint-disable-next-line @next/next/no-img-element */<img key={i} src={part.slice(7,-1)} alt="Report figure"/>:s.kind==="code"?<pre key={i}>{part}</pre>:<p key={i}>{part}</p>)}</section>)}</section>
   </article></div>;
@@ -154,7 +148,7 @@ export default function Home({ view, report, setReport }: { view: "editor" | "pr
     <section className="report-workspace">
       <aside className="report-editor">
         <div className="report-panel">
-          <div className="report-utility-row"><span className="progress"><b>{complete}%</b> complete</span><Button className="report-download" size="sm" disabled={downloading} onClick={downloadCompleteReport}>{downloading?"Preparing…":"Download PDF"}</Button></div>
+          <div className="report-utility-row"><span className="progress"><b>{complete}%</b> complete</span></div>
           <div className="preset-card">
             <div className="preset-card-heading"><strong>Course</strong><span className={`source-badge ${selectedUniversity.verified?"verified":"demo"}`}>{selectedUniversity.verified?"Verified":"Demo"}</span></div>
             <div className="preset-grid">

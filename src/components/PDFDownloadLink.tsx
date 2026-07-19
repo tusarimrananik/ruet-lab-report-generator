@@ -1,18 +1,50 @@
 import { DownloadIcon } from '@radix-ui/react-icons';
 import { pdf } from '@react-pdf/renderer';
 import { fileSave } from 'browser-fs-access';
+import dayjs from 'dayjs';
+import { useAtomValue } from 'jotai';
+import { PDFDocument } from 'pdf-lib';
 import { type ComponentProps, type MouseEvent, useTransition } from 'react';
 import { defaultStore } from '@/store';
 import editor from '@/store/editor';
 import { CoverTemplate } from './cover-template';
+import { type LabReport, ReportDocument } from './report-pdf';
 import { LoadingSpinner } from './ui/loading-spinner';
 
 export const PDFDownloadLink = ({
-  fileName = 'document.pdf',
+  report,
   ...props
-}: { fileName?: string } & ComponentProps<'button'>) => {
+}: { report: LabReport } & ComponentProps<'button'>) => {
   const [isPending, startTransition] = useTransition();
-  const fileNameClean = fileName
+  const department = useAtomValue(editor.studentDepartment);
+  const courseCode = useAtomValue(editor.courseNo);
+  const courseTitle = useAtomValue(editor.courseTitle);
+  const labNo = useAtomValue(editor.coverNo);
+  const labTitle = useAtomValue(editor.coverTitle);
+  const experimentDate = useAtomValue(editor.dateOfExperiment);
+  const submissionDate = useAtomValue(editor.dateOfSubmission);
+  const studentName = useAtomValue(editor.studentName);
+  const roll = useAtomValue(editor.studentID);
+  const section = useAtomValue(editor.studentSection);
+  const teacherName = useAtomValue(editor.teacherName);
+  const teacherTitle = useAtomValue(editor.teacherDesignation);
+  const completeReport: LabReport = {
+    ...report,
+    department,
+    courseCode,
+    courseTitle,
+    labNo,
+    labTitle,
+    experimentDate: experimentDate ? dayjs(experimentDate).format('YYYY-MM-DD') : '',
+    submissionDate: submissionDate ? dayjs(submissionDate).format('YYYY-MM-DD') : '',
+    studentName,
+    roll,
+    section,
+    series: roll.slice(0, 2),
+    teacherName,
+    teacherTitle,
+  };
+  const fileNameClean = `${courseCode || 'RUET'}-Lab-${labNo || 'Report'}.pdf`
     .replace(' ', '_')
     .replace(/[^a-zA-Z0-9.\-_]/g, '');
 
@@ -21,7 +53,17 @@ export const PDFDownloadLink = ({
   ) => {
     startTransition(async () => {
       try {
-        const blob = await pdf(<CoverTemplate key={Math.random()} />).toBlob();
+        const [coverBlob, reportBlob] = await Promise.all([
+          pdf(<CoverTemplate key={Math.random()} />).toBlob(),
+          pdf(<ReportDocument report={completeReport} />).toBlob(),
+        ]);
+        const merged = await PDFDocument.create();
+        for (const sourceBlob of [coverBlob, reportBlob]) {
+          const source = await PDFDocument.load(await sourceBlob.arrayBuffer());
+          const pages = await merged.copyPages(source, source.getPageIndices());
+          pages.forEach((page) => merged.addPage(page));
+        }
+        const blob = new Blob([await merged.save()], { type: 'application/pdf' });
         if (window.navigator.userAgent === 'ruet-cover-page-gen') {
           const fileReader = new FileReader();
           fileReader.onloadend = () => {
@@ -47,7 +89,7 @@ export const PDFDownloadLink = ({
         });
       } catch (error) {
         console.error(error);
-        alert('Could not download!');
+        alert('Could not download the complete report.');
       }
     });
     try {

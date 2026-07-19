@@ -1,8 +1,7 @@
 import { ArrowLeftIcon, EyeOpenIcon } from '@radix-ui/react-icons';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { useMemo } from 'react';
+import { useSetAtom } from 'jotai';
+import type { LabReport } from './report-pdf';
 import icon from '@/assets/icon.svg';
-import atoms from '@/store/editor';
 import { previewModeAtom } from '@/store/preview-mode';
 import { ModeToggle } from './mode-toggle';
 import PDFDownloadLink from './PDFDownloadLink';
@@ -32,20 +31,8 @@ export function TopbarLeft() {
   );
 }
 
-export function TopbarRight() {
+export function TopbarRight({ report }: { report: LabReport }) {
   const setPreviewMode = useSetAtom(previewModeAtom);
-  const courseNo = useAtomValue(atoms.courseNo);
-  const studentID = useAtomValue(atoms.studentID);
-  const coverNo = useAtomValue(atoms.coverNo);
-  const filename = useMemo(() => {
-    const parts = [
-      'Cover',
-      courseNo,
-      studentID,
-      coverNo.padStart(2, '0'),
-    ].filter(Boolean);
-    return parts.join('-');
-  }, [courseNo, studentID, coverNo]);
 
   return (
     <div className="cover-pane-toolbar cover-preview-header">
@@ -60,7 +47,7 @@ export function TopbarRight() {
       </Button>
       <div className="ms-auto">
         <Button variant="outline" size="icon" asChild>
-          <PDFDownloadLink fileName={`${filename}.pdf`} />
+          <PDFDownloadLink report={report} />
         </Button>
       </div>
     </div>
