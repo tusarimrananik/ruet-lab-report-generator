@@ -43,7 +43,7 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
     ["output","Sample Output","Paste the output or add an observation."],
     ["discussion","Discussion","Interpret the output and explain any noteworthy cases."],
     ["conclusion","Conclusion","Summarize what was verified and learned."],
-  ].map(([id,title,body,kind])=>({id,title,body,kind: kind as Section["kind"]})) },
+  ].map(([id,title,placeholder,kind])=>makeSection(id,title,placeholder,kind as Section["kind"])) },
   electrical: { label: "Electrical / Instrumentation", sections: [
     ["objectives","Objectives","1. State the primary objective.\n2. Add any comparison or verification objective."],
     ["theory","Theory","Explain the operating principle, relationships, and relevant formulae."],
@@ -53,7 +53,7 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
     ["data","Data Table and Calculations","Add measured values, units, equations, sample calculations, and percentage error."],
     ["result","Result and Discussion","Compare experimental and theoretical values. Discuss errors, losses, and instrument limitations."],
     ["conclusion","Conclusion","State whether the experiment verified the expected behaviour."],
-  ].map(([id,title,body])=>({id,title,body})) },
+  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
   experimental: { label: "Experimental Science", sections: [
     ["objective","Objective","State the purpose of the experiment clearly."],
     ["theory","Theory","Explain the scientific principle, relationships, and relevant formulae."],
@@ -63,7 +63,7 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
     ["result","Result","State the result obtained without inventing measurements that were not observed."],
     ["discussion","Discussion","Interpret the result and discuss errors, limitations, and comparison with expected behaviour."],
     ["conclusion","Conclusion","Summarize what the experiment demonstrated."],
-  ].map(([id,title,body])=>({id,title,body})) },
+  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
   general: { label: "General Sessional", sections: [
     ["objective","Objective","State the purpose and expected learning outcome."],
     ["introduction","Introduction or Theory","Explain the relevant concepts and background."],
@@ -71,7 +71,7 @@ const presets: Record<string, { label: string; sections: Section[] }> = {
     ["output","Output or Deliverable","Add the produced work, result, presentation summary, or observation."],
     ["discussion","Discussion","Explain the outcome, important decisions, limitations, and lessons learned."],
     ["conclusion","Conclusion","Summarize the completed work and learning outcome."],
-  ].map(([id,title,body])=>({id,title,body})) },
+  ].map(([id,title,placeholder])=>makeSection(id,title,placeholder)) },
 };
 
 const initial: Report = {
@@ -94,7 +94,7 @@ const legacyAssemblyPrompts = new Set([
   "Summarize the concepts and practical skills learned from the experiment.",
 ]);
 
-const normalizeDraft = (draft: Report): Report => {
+const defaultSectionPrompts = new Set([\n  ...legacyAssemblyPrompts,\n  ...Object.values(presets).flatMap(preset => preset.sections.map(section => section.placeholder).filter(Boolean)),\n]);\n\nconst normalizeDraft = (draft: Report): Report => {
   const normalized = {
     ...draft,
     university: draft.university || "ruet",
@@ -102,13 +102,13 @@ const normalizeDraft = (draft: Report): Report => {
     semester: draft.semester || "2-2",
     sessionalCourse: draft.sessionalCourse || (draft.preset === "assembly" ? "CSE 2206" : ""),
   };
-  if (normalized.preset !== "assembly") return normalized;
+  const templateSections = presets[normalized.preset]?.sections;\n  if (!templateSections) return normalized;
   const existing = new Map(normalized.sections.map(section => [section.id, section]));
   return {
     ...normalized,
-    sections: presets.assembly.sections.map(template => {
+    sections: templateSections.map(template => {
       const saved = existing.get(template.id) ?? (template.id === "verdict" ? existing.get("result") : undefined);
-      const body = saved?.body && !legacyAssemblyPrompts.has(saved.body) ? saved.body : "";
+      const body = saved?.body && !defaultSectionPrompts.has(saved.body) ? saved.body : "";
       return { ...template, body };
     }),
   };
